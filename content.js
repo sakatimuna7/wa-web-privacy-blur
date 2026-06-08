@@ -28,7 +28,8 @@
     valIdle: 5,
     usePin: false,
     securityPin: '1234',
-    panicButton: false
+    panicButton: false,
+    isLocked: false
   };
 
   // State Variables
@@ -51,6 +52,7 @@
       stopIdleTracking();
       hideIdleOverlay();
       removePanicButton();
+      chrome.storage.local.set({ isLocked: false });
       return;
     }
 
@@ -91,7 +93,9 @@
     isIdleEnabled = settings.blurIdle;
     idleDurationMs = settings.valIdle * 60 * 1000;
     
-    if (isIdleEnabled) {
+    if (settings.isLocked) {
+      showIdleOverlay();
+    } else if (isIdleEnabled) {
       startIdleTracking();
     } else {
       stopIdleTracking();
@@ -162,6 +166,9 @@
     let overlay = document.getElementById('wa-privacy-idle-overlay');
     enteredPin = '';
     
+    // Save state to storage so it persists across reloads!
+    chrome.storage.local.set({ isLocked: true });
+
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'wa-privacy-idle-overlay';
@@ -258,6 +265,9 @@
     document.documentElement.classList.remove('wa-idle-active');
     isOverlayActive = false;
     
+    // Save state to storage!
+    chrome.storage.local.set({ isLocked: false });
+
     window.removeEventListener('keydown', handlePhysicalKeyboard, true);
 
     if (isIdleEnabled) {
