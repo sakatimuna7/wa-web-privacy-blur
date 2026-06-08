@@ -28,6 +28,20 @@
       </div>
     </div>
 
+    <!-- Visual Style Card -->
+    <div class="card visual-style-card">
+      <div class="setting-row">
+        <span class="setting-label font-bold">Tipe Blur</span>
+        <div class="select-wrapper">
+          <select id="blur-style-select">
+            <option value="blur">Blur (Standar)</option>
+            <option value="solid">Solid (Blok Abu-Abu)</option>
+            <option value="faded">Faded (Transparan)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings List Section -->
     <div class="card settings-card">
       <h2 class="section-title">Settings</h2>
@@ -219,6 +233,42 @@
               <span class="slider-title">Waktu Idle: <span id="val-idle">5 menit</span></span>
               <input type="range" class="blur-slider" id="slide-idle" min="1" max="60" value="5">
             </div>
+          </div>
+        </div>
+
+        <!-- 11. Use Security PIN -->
+        <div class="setting-item" id="item-use-pin">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Gunakan PIN Keamanan</span>
+              <button class="gear-btn" data-target="drawer-pin" title="Atur PIN Keamanan">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-use-pin">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-pin">
+            <div class="slider-container">
+              <span class="slider-title">PIN Sekarang: <span id="val-pin">1234</span></span>
+              <div class="pin-input-wrapper">
+                <input type="password" id="input-pin" maxlength="4" placeholder="4-digit PIN baru" pattern="\d{4}">
+                <button id="save-pin-btn">Set PIN</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 12. Floating Panic Button -->
+        <div class="setting-item" id="item-panic-button">
+          <div class="setting-row">
+            <span class="setting-label">Floating Panic Button</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-panic-button">
+              <span class="slider round"></span>
+            </label>
           </div>
         </div>
 

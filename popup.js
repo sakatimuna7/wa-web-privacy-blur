@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Elements
   const mainActiveToggle = document.getElementById('main-active-toggle');
   const settingsCard = document.querySelector('.settings-card');
+  const blurStyleSelect = document.getElementById('blur-style-select');
   
   const toggles = {
     messages: document.getElementById('toggle-blur-messages'),
@@ -13,7 +14,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     names: document.getElementById('toggle-blur-names'),
     transition: document.getElementById('toggle-no-transition'),
     hover: document.getElementById('toggle-unblur-hover'),
-    idle: document.getElementById('toggle-blur-idle')
+    idle: document.getElementById('toggle-blur-idle'),
+    usePin: document.getElementById('toggle-use-pin'),
+    panicButton: document.getElementById('toggle-panic-button')
   };
 
   const sliders = {
@@ -36,9 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     idle: document.getElementById('val-idle')
   };
 
+  const inputPin = document.getElementById('input-pin');
+  const savePinBtn = document.getElementById('save-pin-btn');
+  const valPin = document.getElementById('val-pin');
+
   // Default values
   const defaults = {
     mainActive: true,
+    blurStyle: 'blur',
     blurMessages: true,
     valMessages: 8,
     blurPreviews: true,
@@ -48,14 +56,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     blurGallery: true,
     valGallery: 15,
     blurInput: true,
-    blurAvatars: false, // Default profile pic blur off or on? User image shows it toggled off. Let's match image exactly!
+    blurAvatars: false, 
     valAvatars: 10,
-    blurNames: false, // In user's image: Group/Users names is OFF. Profile pictures is OFF. All messages in chat is ON. Last messages preview is ON. Media preview is ON. Media gallery is ON. Text input is ON. No transition delay is ON. Unblur all on app hover is OFF. Blur WhatsApp on Idle is OFF.
+    blurNames: false, 
     valNames: 10,
-    noTransition: true, // matching user image (No transition delay toggle is ON)
+    noTransition: true, 
     unblurHover: false,
     blurIdle: false,
-    valIdle: 5
+    valIdle: 5,
+    usePin: false,
+    securityPin: '1234',
+    panicButton: false
   };
 
   // 1. Gear button drawers toggle
@@ -88,6 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       mainActiveToggle.checked = settings.mainActive;
       toggleSettingsState(settings.mainActive);
 
+      // Blur Style Dropdown
+      blurStyleSelect.value = settings.blurStyle;
+
       // Sub toggles
       toggles.messages.checked = settings.blurMessages;
       toggles.previews.checked = settings.blurPreviews;
@@ -99,6 +113,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       toggles.transition.checked = settings.noTransition;
       toggles.hover.checked = settings.unblurHover;
       toggles.idle.checked = settings.blurIdle;
+      toggles.usePin.checked = settings.usePin;
+      toggles.panicButton.checked = settings.panicButton;
+
+      // PIN value label
+      valPin.textContent = settings.securityPin;
 
       // Sliders & value text
       Object.keys(sliders).forEach(key => {
@@ -123,9 +142,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isActive) {
       settingsCard.style.opacity = '1';
       settingsCard.style.pointerEvents = 'auto';
+      blurStyleSelect.style.opacity = '1';
+      blurStyleSelect.style.pointerEvents = 'auto';
     } else {
       settingsCard.style.opacity = '0.5';
       settingsCard.style.pointerEvents = 'none';
+      blurStyleSelect.style.opacity = '0.5';
+      blurStyleSelect.style.pointerEvents = 'none';
       // Collapse drawers when disabled
       document.querySelectorAll('.slider-drawer').forEach(d => d.classList.remove('expanded'));
       document.querySelectorAll('.gear-btn').forEach(b => b.classList.remove('active'));
@@ -139,6 +162,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleSettingsState(isActive);
   });
 
+  // Blur Style Change Listener
+  blurStyleSelect.addEventListener('change', () => {
+    saveSetting('blurStyle', blurStyleSelect.value);
+  });
+
   // Sub switches change listeners
   toggles.messages.addEventListener('change', () => saveSetting('blurMessages', toggles.messages.checked));
   toggles.previews.addEventListener('change', () => saveSetting('blurPreviews', toggles.previews.checked));
@@ -150,6 +178,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggles.transition.addEventListener('change', () => saveSetting('noTransition', toggles.transition.checked));
   toggles.hover.addEventListener('change', () => saveSetting('unblurHover', toggles.hover.checked));
   toggles.idle.addEventListener('change', () => saveSetting('blurIdle', toggles.idle.checked));
+  toggles.usePin.addEventListener('change', () => saveSetting('usePin', toggles.usePin.checked));
+  toggles.panicButton.addEventListener('change', () => saveSetting('panicButton', toggles.panicButton.checked));
+
+  // Save PIN button listener
+  savePinBtn.addEventListener('click', () => {
+    const newPin = inputPin.value.trim();
+    if (/^\d{4}$/.test(newPin)) {
+      saveSetting('securityPin', newPin);
+      valPin.textContent = newPin;
+      inputPin.value = '';
+      alert('PIN Keamanan berhasil disimpan!');
+    } else {
+      alert('PIN harus berupa 4 digit angka, bre!');
+    }
+  });
 
   // Sliders input listeners
   Object.keys(sliders).forEach(key => {

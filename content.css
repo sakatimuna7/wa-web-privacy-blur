@@ -9,8 +9,58 @@
   --wa-blur-gallery: 15px;
   --wa-blur-avatars: 10px;
   --wa-blur-names: 10px;
-  --wa-transition-duration: 0s; /* Toggled dynamically between 0s and 0.2s */
+  --wa-transition-duration: 0s;
+  
+  /* Fallback filter values */
+  --wa-filter-messages: blur(var(--wa-blur-messages));
+  --wa-filter-previews: blur(var(--wa-blur-previews));
+  --wa-filter-media: blur(var(--wa-blur-media));
+  --wa-filter-gallery: blur(var(--wa-blur-gallery));
+  --wa-filter-avatars: blur(var(--wa-blur-avatars));
+  --wa-filter-names: blur(var(--wa-blur-names));
+  --wa-filter-input: blur(6px);
 }
+
+/* ==========================================================================
+   BLUR STYLES CONFIGURATIONS
+   ========================================================================== */
+
+/* 1. Blur (Standard Gaussian) */
+html.wa-style-blur {
+  --wa-filter-messages: blur(var(--wa-blur-messages));
+  --wa-filter-previews: blur(var(--wa-blur-previews));
+  --wa-filter-media: blur(var(--wa-blur-media));
+  --wa-filter-gallery: blur(var(--wa-blur-gallery));
+  --wa-filter-avatars: blur(var(--wa-blur-avatars));
+  --wa-filter-names: blur(var(--wa-blur-names));
+  --wa-filter-input: blur(6px);
+}
+
+/* 2. Solid (Color Block / Hidden) */
+html.wa-style-solid {
+  --wa-filter-messages: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-previews: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-media: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-gallery: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-avatars: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-names: brightness(0.85) contrast(0) saturate(0);
+  --wa-filter-input: brightness(0.85) contrast(0) saturate(0);
+}
+
+/* 3. Faded (Super Faint Opacity) */
+html.wa-style-faded {
+  --wa-filter-messages: opacity(0.08);
+  --wa-filter-previews: opacity(0.08);
+  --wa-filter-media: opacity(0.08);
+  --wa-filter-gallery: opacity(0.08);
+  --wa-filter-avatars: opacity(0.08);
+  --wa-filter-names: opacity(0.08);
+  --wa-filter-input: opacity(0.08);
+}
+
+/* ==========================================================================
+   SELECTORS & FILTER APPLICATIONS
+   ========================================================================== */
 
 /* --- 1. All messages in chat --- */
 html.wa-blur-messages-active [data-testid="msg-container"],
@@ -20,7 +70,7 @@ html.wa-blur-messages-active .x126k92a.x1tlxs6b.x1g8br2z.x1gnnqk1.x1sidg6d.x1v11
 html.wa-blur-messages-active .message-in span.selectable-text,
 html.wa-blur-messages-active .message-out span.selectable-text,
 html.wa-blur-messages-active div.copyable-text span.selectable-text {
-  filter: blur(var(--wa-blur-messages)) !important;
+  filter: var(--wa-filter-messages) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -31,7 +81,7 @@ html.wa-blur-messages-active .x126k92a.x1tlxs6b.x1g8br2z.x1gnnqk1.x1sidg6d.x1v11
 html.wa-blur-messages-active .message-in span.selectable-text:hover,
 html.wa-blur-messages-active .message-out span.selectable-text:hover,
 html.wa-blur-messages-active div.copyable-text span.selectable-text:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 2. Last messages preview --- */
@@ -42,7 +92,7 @@ html.wa-blur-previews-active span[data-icon="text-status-v-check"] + span,
 html.wa-blur-previews-active div[data-testid="last-msg-status"] + span,
 html.wa-blur-previews-active div[id="pane-side"] span.selectable-text,
 html.wa-blur-previews-active .x173jzuc.x1ri5ex2.x1am9s21.x19991ni.x1k4tb9n.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x13fuvv6.x1vncg7w.x1v8jcee.x136yj6b {
-  filter: blur(var(--wa-blur-previews)) !important;
+  filter: var(--wa-filter-previews) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -53,7 +103,7 @@ html.wa-blur-previews-active span[data-icon="text-status-v-check"] + span:hover,
 html.wa-blur-previews-active div[data-testid="last-msg-status"] + span:hover,
 html.wa-blur-previews-active div[id="pane-side"] span.selectable-text:hover,
 html.wa-blur-previews-active .x173jzuc.x1ri5ex2.x1am9s21.x19991ni.x1k4tb9n.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x13fuvv6.x1vncg7w.x1v8jcee.x136yj6b:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 3. Media preview (inside messages) --- */
@@ -67,7 +117,7 @@ html.wa-blur-media-active [data-testid="media-canvas-wrapper"] video,
 html.wa-blur-media-active [data-testid="msg-container"] [style*="background-image"],
 html.wa-blur-media-active [data-testid="image-blur-wrapper"],
 html.wa-blur-media-active [data-testid="media-canvas-wrapper"] {
-  filter: blur(var(--wa-blur-media)) !important;
+  filter: var(--wa-filter-media) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -81,7 +131,7 @@ html.wa-blur-media-active [data-testid="media-canvas-wrapper"] video:hover,
 html.wa-blur-media-active [data-testid="msg-container"] [style*="background-image"]:hover,
 html.wa-blur-media-active [data-testid="image-blur-wrapper"]:hover,
 html.wa-blur-media-active [data-testid="media-canvas-wrapper"]:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 4. Media gallery (side panels, grid, sticker picker, etc.) --- */
@@ -93,7 +143,7 @@ html.wa-blur-gallery-active [data-testid="shared-media-list"] img,
 html.wa-blur-gallery-active div[role="dialog"] img,
 html.wa-blur-gallery-active div[role="dialog"] video,
 html.wa-blur-gallery-active div[role="dialog"] [style*="background-image"] {
-  filter: blur(var(--wa-blur-gallery)) !important;
+  filter: var(--wa-filter-gallery) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -105,14 +155,14 @@ html.wa-blur-gallery-active [data-testid="shared-media-list"] img:hover,
 html.wa-blur-gallery-active div[role="dialog"] img:hover,
 html.wa-blur-gallery-active div[role="dialog"] video:hover,
 html.wa-blur-gallery-active div[role="dialog"] [style*="background-image"]:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 5. Text input --- */
 html.wa-blur-input-active footer [contenteditable="true"],
 html.wa-blur-input-active footer [role="textbox"],
 html.wa-blur-input-active footer .lexical-rich-text-input {
-  filter: blur(6px) !important;
+  filter: var(--wa-filter-input) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -122,7 +172,7 @@ html.wa-blur-input-active footer [role="textbox"]:hover,
 html.wa-blur-input-active footer [role="textbox"]:focus-within,
 html.wa-blur-input-active footer .lexical-rich-text-input:hover,
 html.wa-blur-input-active footer .lexical-rich-text-input:focus-within {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 6. Profile pictures --- */
@@ -134,7 +184,7 @@ html.wa-blur-avatars-active div[data-testid="avatar"],
 html.wa-blur-avatars-active [data-testid="cell-frame-container"] img, 
 html.wa-blur-avatars-active [data-testid="conversation-info-header"] img, 
 html.wa-blur-avatars-active img.x14y5505 {
-  filter: blur(var(--wa-blur-avatars)) !important;
+  filter: var(--wa-filter-avatars) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -146,7 +196,7 @@ html.wa-blur-avatars-active div[data-testid="avatar"]:hover,
 html.wa-blur-avatars-active [data-testid="cell-frame-container"] img:hover, 
 html.wa-blur-avatars-active [data-testid="conversation-info-header"] img:hover, 
 html.wa-blur-avatars-active img.x14y5505:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* --- 7. Group/Users names --- */
@@ -156,7 +206,7 @@ html.wa-blur-names-active span[data-testid="chat-subtitle"],
 html.wa-blur-names-active header span[title], 
 html.wa-blur-names-active div[data-testid="cell-frame-container"] span[title], 
 html.wa-blur-names-active div[id="pane-side"] span[title] {
-  filter: blur(var(--wa-blur-names)) !important;
+  filter: var(--wa-filter-names) !important;
   transition: filter var(--wa-transition-duration) ease !important;
 }
 
@@ -166,7 +216,7 @@ html.wa-blur-names-active span[data-testid="chat-subtitle"]:hover,
 html.wa-blur-names-active header span[title]:hover, 
 html.wa-blur-names-active div[data-testid="cell-frame-container"] span[title]:hover, 
 html.wa-blur-names-active div[id="pane-side"] span[title]:hover {
-  filter: blur(0px) !important;
+  filter: none !important;
 }
 
 /* ==========================================================================
@@ -200,11 +250,11 @@ html.wa-idle-active #app {
   align-items: center;
   justify-content: center;
   color: white;
-  cursor: pointer;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
 }
 
 #wa-privacy-idle-overlay.visible {
@@ -213,25 +263,21 @@ html.wa-idle-active #app {
 }
 
 #wa-privacy-idle-overlay .lock-box {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 30px 45px;
   border-radius: 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  animation: lock-box-pulse 3s infinite ease-in-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   max-width: 90%;
-  width: 320px;
-}
-
-@keyframes lock-box-pulse {
-  0% { transform: scale(1); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
-  50% { transform: scale(1.02); box-shadow: 0 12px 50px rgba(0, 168, 132, 0.15); }
-  100% { transform: scale(1); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
+  width: 340px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 #wa-privacy-idle-overlay .lock-icon {
@@ -251,4 +297,148 @@ html.wa-idle-active #app {
   opacity: 0.8;
   margin: 0;
   line-height: 1.4;
+}
+
+/* --- Interactive PIN Code UI --- */
+.pin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.pin-dots {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  height: 20px;
+}
+
+.pin-dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.pin-dot.active {
+  background-color: #00a884;
+  border-color: #00a884;
+  box-shadow: 0 0 10px rgba(0, 168, 132, 0.7);
+  transform: scale(1.25);
+}
+
+.pin-keyboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 220px;
+}
+
+.pin-key {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pin-key:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pin-key:active {
+  transform: scale(0.9);
+  background: rgba(0, 168, 132, 0.3);
+  border-color: #00a884;
+}
+
+.pin-key.action-key {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pin-key.action-key:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.error-text {
+  color: #ff5252;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  height: 14px;
+  transition: opacity 0.15s ease;
+  margin-top: -6px;
+}
+
+.error-text.visible {
+  opacity: 1;
+}
+
+/* Shake Animation for Wrong Passcode */
+.shake {
+  animation: pin-shake 0.3s ease-in-out;
+}
+
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+/* ==========================================================================
+   FLOATING PANIC BUTTON
+   ========================================================================== */
+#wa-panic-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #00a884;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 168, 132, 0.35);
+  z-index: 99999;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s, opacity 0.25s;
+  opacity: 0.6;
+}
+
+#wa-panic-button:hover {
+  transform: scale(1.1) rotate(15deg);
+  background-color: #008f72;
+  box-shadow: 0 6px 20px rgba(0, 168, 132, 0.5);
+  opacity: 1;
+}
+
+#wa-panic-button:active {
+  transform: scale(0.9);
+}
+
+#wa-panic-button svg {
+  width: 20px;
+  height: 20px;
+  stroke: white;
 }

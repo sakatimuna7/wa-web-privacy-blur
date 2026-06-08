@@ -318,3 +318,87 @@ input:checked + .slider:before {
 .blur-slider::-moz-range-thumb:hover {
   transform: scale(1.15);
 }
+
+/* Select Input Styling */
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 140px;
+}
+
+#blur-style-select {
+  width: 100%;
+  padding: 6px 30px 6px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: var(--transition);
+}
+
+#blur-style-select:hover {
+  border-color: var(--wa-green);
+}
+
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-secondary);
+  pointer-events: none;
+}
+
+/* PIN Input Styling */
+.pin-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+#input-pin {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  letter-spacing: 4px;
+  transition: var(--transition);
+}
+
+#input-pin:focus {
+  border-color: var(--wa-green);
+  box-shadow: 0 0 0 2px var(--wa-green-light);
+}
+
+#save-pin-btn {
+  padding: 6px 14px;
+  background-color: var(--wa-green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+#save-pin-btn:hover {
+  background-color: var(--wa-green-hover);
+}
