@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     valIdle: 5,
     usePin: false,
     securityPin: '1234',
-    panicButton: false
+    panicButton: false,
+    selectivelyBlurredChats: []
   };
 
   // 1. Gear button drawers toggle

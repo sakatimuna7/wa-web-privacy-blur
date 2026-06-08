@@ -29,7 +29,8 @@
     usePin: false,
     securityPin: '1234',
     panicButton: false,
-    isLocked: false
+    isLocked: false,
+    selectivelyBlurredChats: []
   };
 
   // State Variables
@@ -37,6 +38,9 @@
   let isIdleEnabled = false;
   let idleDurationMs = 5 * 60 * 1000;
   let isOverlayActive = false;
+
+  let selectivelyBlurredChats = [];
+  let isExtensionActive = true;
   
   let isPinEnabled = false;
   let currentSecurityPin = '1234';
@@ -45,6 +49,8 @@
   // 1. Initialize and monitor settings
   const applySettings = (settings) => {
     const root = document.documentElement;
+    isExtensionActive = settings.mainActive;
+    selectivelyBlurredChats = settings.selectivelyBlurredChats || [];
 
     if (!settings.mainActive) {
       // If extension is disabled, clear all classes and stop idle timer
@@ -52,9 +58,13 @@
       stopIdleTracking();
       hideIdleOverlay();
       removePanicButton();
+      removeSelectiveLocks();
       chrome.storage.local.set({ isLocked: false });
       return;
     }
+
+    // Call scan immediately when settings are updated
+    setTimeout(scanSelectiveChats, 50);
 
     // A. Apply Blur Style Class
     root.classList.remove('wa-style-blur', 'wa-style-solid', 'wa-style-faded');
@@ -126,7 +136,8 @@
       'wa-blur-input-active',
       'wa-blur-avatars-active',
       'wa-blur-names-active',
-      'wa-unblur-hover-active'
+      'wa-unblur-hover-active',
+      'wa-active-chat-locked'
     );
   };
 
@@ -372,6 +383,130 @@
       panicBtn.remove();
     }
   };
+
+  // ==========================================================================
+  // SELECTIVE CHAT BLUR LOGIC
+  // ==========================================================================
+
+  function getRowElement(container) {
+    let parent = container.parentElement;
+    while (parent && parent !== document.body) {
+      if (parent.querySelector('[data-testid="avatar"]') || parent.querySelector('[data-testid="chat-avatar"]')) {
+        return parent;
+      }
+      parent = parent.parentElement;
+    }
+    return container;
+  }
+
+  function getActiveChatName() {
+    const header = document.querySelector('[data-testid="conversation-info-header"]') || 
+                   document.querySelector('header');
+    if (header) {
+      const titleEl = header.querySelector('[data-testid="conversation-info-header-chat-title"]') || 
+                      header.querySelector('span[title]') || 
+                      header.querySelector('[dir="auto"]');
+      if (titleEl) {
+        return (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+      }
+    }
+    return '';
+  }
+
+  function toggleChatLock(name) {
+    chrome.storage.local.get(defaults, (settings) => {
+      let list = settings.selectivelyBlurredChats || [];
+      if (list.includes(name)) {
+        list = list.filter(item => item !== name);
+      } else {
+        list.push(name);
+      }
+      chrome.storage.local.set({ selectivelyBlurredChats: list }, () => {
+        selectivelyBlurredChats = list;
+        scanSelectiveChats();
+      });
+    });
+  }
+
+  function removeSelectiveLocks() {
+    document.querySelectorAll('.wa-selective-lock-btn').forEach(btn => btn.remove());
+    document.querySelectorAll('.wa-row-locked').forEach(row => row.classList.remove('wa-row-locked'));
+    document.documentElement.classList.remove('wa-active-chat-locked');
+  }
+
+  function scanSelectiveChats() {
+    if (!isExtensionActive) {
+      removeSelectiveLocks();
+      return;
+    }
+
+    // 1. Scan chat list rows
+    const containers = document.querySelectorAll('[data-testid="cell-frame-container"]');
+    containers.forEach(container => {
+      const titleEl = container.querySelector('[data-testid="cell-frame-title"] span[title]') || 
+                      container.querySelector('[data-testid="cell-frame-title"]') || 
+                      container.querySelector('span[title]');
+      if (!titleEl) return;
+      const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+      if (!name) return;
+
+      let lockBtn = container.querySelector('.wa-selective-lock-btn');
+      if (!lockBtn) {
+        lockBtn = document.createElement('div');
+        lockBtn.className = 'wa-selective-lock-btn';
+        lockBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const currentName = lockBtn.getAttribute('data-name');
+          if (currentName) {
+            toggleChatLock(currentName);
+          }
+        });
+        container.appendChild(lockBtn);
+      }
+
+      lockBtn.setAttribute('data-name', name);
+
+      const isLocked = selectivelyBlurredChats.includes(name);
+      const rowEl = getRowElement(container);
+
+      if (isLocked) {
+        lockBtn.classList.add('locked');
+        lockBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        `;
+        if (rowEl) {
+          rowEl.classList.add('wa-row-locked');
+        }
+      } else {
+        lockBtn.classList.remove('locked');
+        lockBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+          </svg>
+        `;
+        if (rowEl) {
+          rowEl.classList.remove('wa-row-locked');
+        }
+      }
+    });
+
+    // 2. Scan active chat header
+    const activeChatName = getActiveChatName();
+    const root = document.documentElement;
+    if (activeChatName && selectivelyBlurredChats.includes(activeChatName)) {
+      root.classList.add('wa-active-chat-locked');
+    } else {
+      root.classList.remove('wa-active-chat-locked');
+    }
+  }
+
+  // Start periodic scanning
+  const scanInterval = setInterval(scanSelectiveChats, 500);
 
   // 6. Listen for settings updates from the popup
   chrome.storage.onChanged.addListener((changes, areaName) => {

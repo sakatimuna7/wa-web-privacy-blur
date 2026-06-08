@@ -442,3 +442,142 @@ html.wa-idle-active #app {
   height: 20px;
   stroke: white;
 }
+
+/* ==========================================================================
+   SELECTIVE CHAT BLUR
+   ========================================================================== */
+
+/* 1. Selective Lock Button positioning & styles */
+[data-testid="cell-frame-container"] {
+  position: relative !important;
+}
+
+.wa-selective-lock-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(240, 242, 245, 0.9); /* light mode default */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #8696a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.wa-selective-lock-btn svg {
+  pointer-events: none;
+}
+
+/* Hovering over the row reveals the lock button */
+[data-testid="cell-frame-container"]:hover .wa-selective-lock-btn {
+  opacity: 0.85;
+}
+
+.wa-selective-lock-btn:hover {
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.1);
+  color: #00a884 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.2);
+}
+
+.wa-selective-lock-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Locked state styling */
+.wa-selective-lock-btn.locked {
+  opacity: 1 !important;
+  color: #ffffff !important;
+  background-color: #00a884 !important;
+  border-color: #00a884 !important;
+  box-shadow: 0 2px 6px rgba(0, 168, 132, 0.3);
+}
+
+.wa-selective-lock-btn.locked:hover {
+  background-color: #008f72 !important;
+  color: #ffffff !important;
+}
+
+/* Dark mode overrides */
+.theme-dark .wa-selective-lock-btn,
+html.theme-dark .wa-selective-lock-btn,
+:root[class*="theme-dark"] .wa-selective-lock-btn {
+  background: rgba(30, 42, 49, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #aebac1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.theme-dark .wa-selective-lock-btn:hover,
+html.theme-dark .wa-selective-lock-btn:hover,
+:root[class*="theme-dark"] .wa-selective-lock-btn:hover {
+  background-color: #202c33 !important;
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+}
+
+.theme-dark .wa-selective-lock-btn.locked,
+html.theme-dark .wa-selective-lock-btn.locked,
+:root[class*="theme-dark"] .wa-selective-lock-btn.locked {
+  background-color: #00a884 !important;
+  color: #111b21 !important;
+}
+
+.theme-dark .wa-selective-lock-btn.locked:hover,
+html.theme-dark .wa-selective-lock-btn.locked:hover,
+:root[class*="theme-dark"] .wa-selective-lock-btn.locked:hover {
+  background-color: #008f72 !important;
+}
+
+/* 2. Selective Chat Row Blur Styles */
+.wa-row-locked [data-testid="cell-frame-title"],
+.wa-row-locked [data-testid="cell-frame-secondary"],
+.wa-row-locked [data-testid="chat-subtitle"],
+.wa-row-locked [data-testid="avatar"] img,
+.wa-row-locked [data-testid="chat-avatar"] img,
+.wa-row-locked [data-testid="cell-frame-container"] img,
+.wa-row-locked .x1f6dt5p {
+  filter: var(--wa-filter-names) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+/* Hovering row unblurs it */
+.wa-row-locked:hover [data-testid="cell-frame-title"],
+.wa-row-locked:hover [data-testid="cell-frame-secondary"],
+.wa-row-locked:hover [data-testid="chat-subtitle"],
+.wa-row-locked:hover [data-testid="avatar"] img,
+.wa-row-locked:hover [data-testid="chat-avatar"] img,
+.wa-row-locked:hover [data-testid="cell-frame-container"] img,
+.wa-row-locked:hover .x1f6dt5p {
+  filter: none !important;
+}
+
+/* 3. Selective Active Chat Panel Blur Styles */
+html.wa-active-chat-locked [data-testid="msg-container"],
+html.wa-active-chat-locked .message-in .x1f6dt5p,
+html.wa-active-chat-locked .message-out .x1f6dt5p,
+html.wa-active-chat-locked .message-in span.selectable-text,
+html.wa-active-chat-locked .message-out span.selectable-text,
+html.wa-active-chat-locked div.copyable-text span.selectable-text {
+  filter: var(--wa-filter-messages) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-active-chat-locked [data-testid="msg-container"]:hover,
+html.wa-active-chat-locked .message-in .x1f6dt5p:hover,
+html.wa-active-chat-locked .message-out .x1f6dt5p:hover,
+html.wa-active-chat-locked .message-in span.selectable-text:hover,
+html.wa-active-chat-locked .message-out span.selectable-text:hover,
+html.wa-active-chat-locked div.copyable-text span.selectable-text:hover {
+  filter: none !important;
+}
