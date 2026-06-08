@@ -391,12 +391,16 @@
   function getRowElement(container) {
     let parent = container.parentElement;
     while (parent && parent !== document.body) {
-      if (parent.querySelector('[data-testid="avatar"]') || parent.querySelector('[data-testid="chat-avatar"]')) {
+      if (parent.querySelector('[data-testid="avatar"]') || 
+          parent.querySelector('[data-testid="chat-avatar"]') ||
+          parent.querySelector('img') ||
+          parent.getAttribute('role') === 'row' ||
+          parent.getAttribute('role') === 'listitem') {
         return parent;
       }
       parent = parent.parentElement;
     }
-    return container;
+    return container.parentElement || container;
   }
 
   function getActiveChatName() {

@@ -543,9 +543,9 @@ html.theme-dark .wa-selective-lock-btn.locked:hover,
 .wa-row-locked [data-testid="cell-frame-title"],
 .wa-row-locked [data-testid="cell-frame-secondary"],
 .wa-row-locked [data-testid="chat-subtitle"],
-.wa-row-locked [data-testid="avatar"] img,
-.wa-row-locked [data-testid="chat-avatar"] img,
-.wa-row-locked [data-testid="cell-frame-container"] img,
+.wa-row-locked [data-testid="avatar"],
+.wa-row-locked [data-testid="chat-avatar"],
+.wa-row-locked img,
 .wa-row-locked .x1f6dt5p {
   filter: var(--wa-filter-names) !important;
   transition: filter var(--wa-transition-duration) ease !important;
@@ -555,9 +555,9 @@ html.theme-dark .wa-selective-lock-btn.locked:hover,
 .wa-row-locked:hover [data-testid="cell-frame-title"],
 .wa-row-locked:hover [data-testid="cell-frame-secondary"],
 .wa-row-locked:hover [data-testid="chat-subtitle"],
-.wa-row-locked:hover [data-testid="avatar"] img,
-.wa-row-locked:hover [data-testid="chat-avatar"] img,
-.wa-row-locked:hover [data-testid="cell-frame-container"] img,
+.wa-row-locked:hover [data-testid="avatar"],
+.wa-row-locked:hover [data-testid="chat-avatar"],
+.wa-row-locked:hover img,
 .wa-row-locked:hover .x1f6dt5p {
   filter: none !important;
 }
