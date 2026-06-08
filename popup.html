@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WA Web Privacy Blur Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header Area -->
+    <header class="header">
+      <div class="brand">
+        <img src="logo.png" alt="Logo" class="logo-img">
+        <h1>WA Privacy Blur</h1>
+      </div>
+      <p class="subtitle">Amankan privasi layar WhatsApp Web lo, bre!</p>
+    </header>
+
+    <!-- Main Active Switch -->
+    <div class="card main-toggle-card">
+      <div class="setting-row">
+        <span class="setting-label main-label">Aktifkan Blur</span>
+        <label class="switch">
+          <input type="checkbox" id="main-active-toggle" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Settings List Section -->
+    <div class="card settings-card">
+      <h2 class="section-title">Settings</h2>
+      
+      <!-- List Items -->
+      <div class="settings-list">
+        
+        <!-- 1. All messages in chat -->
+        <div class="setting-item" id="item-blur-messages">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">All messages in chat</span>
+              <button class="gear-btn" data-target="drawer-messages" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-messages" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-messages">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-messages">8px</span></span>
+              <input type="range" class="blur-slider" id="slide-messages" min="2" max="30" value="8">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Last messages preview -->
+        <div class="setting-item" id="item-blur-previews">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Last messages preview</span>
+              <button class="gear-btn" data-target="drawer-previews" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-previews" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-previews">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-previews">6px</span></span>
+              <input type="range" class="blur-slider" id="slide-previews" min="2" max="30" value="6">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Media preview -->
+        <div class="setting-item" id="item-blur-media">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Media preview</span>
+              <button class="gear-btn" data-target="drawer-media" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-media" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-media">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-media">15px</span></span>
+              <input type="range" class="blur-slider" id="slide-media" min="5" max="40" value="15">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Media gallery -->
+        <div class="setting-item" id="item-blur-gallery">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Media gallery</span>
+              <button class="gear-btn" data-target="drawer-gallery" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-gallery" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-gallery">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-gallery">15px</span></span>
+              <input type="range" class="blur-slider" id="slide-gallery" min="5" max="40" value="15">
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Text input -->
+        <div class="setting-item" id="item-blur-input">
+          <div class="setting-row">
+            <span class="setting-label">Text input</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-input" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 6. Profile pictures -->
+        <div class="setting-item" id="item-blur-avatars">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Profile pictures</span>
+              <button class="gear-btn" data-target="drawer-avatars" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-avatars" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-avatars">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-avatars">10px</span></span>
+              <input type="range" class="blur-slider" id="slide-avatars" min="2" max="30" value="10">
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Group/Users names -->
+        <div class="setting-item" id="item-blur-names">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Group/Users names</span>
+              <button class="gear-btn" data-target="drawer-names" title="Sesuaikan intensitas blur">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-names" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-names">
+            <div class="slider-container">
+              <span class="slider-title">Intensitas Blur: <span id="val-names">10px</span></span>
+              <input type="range" class="blur-slider" id="slide-names" min="2" max="30" value="10">
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. No transition delay -->
+        <div class="setting-item" id="item-no-transition">
+          <div class="setting-row">
+            <span class="setting-label">No transition delay</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-no-transition">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 9. Unblur all on app hover -->
+        <div class="setting-item" id="item-unblur-hover">
+          <div class="setting-row">
+            <span class="setting-label">Unblur all on app hover</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-unblur-hover">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 10. Blur WhatsApp on Idle -->
+        <div class="setting-item" id="item-blur-idle">
+          <div class="setting-row">
+            <div class="label-with-icon">
+              <span class="setting-label">Blur WhatsApp on Idle</span>
+              <button class="gear-btn" data-target="drawer-idle" title="Sesuaikan waktu idle">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gear-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-blur-idle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="slider-drawer" id="drawer-idle">
+            <div class="slider-container">
+              <span class="slider-title">Waktu Idle: <span id="val-idle">5 menit</span></span>
+              <input type="range" class="blur-slider" id="slide-idle" min="1" max="60" value="5">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

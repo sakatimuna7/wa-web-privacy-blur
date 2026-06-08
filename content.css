@@ -1,0 +1,254 @@
+/* ==========================================================================
+   WA Web Privacy Blur - Content Styles
+   ========================================================================== */
+
+:root {
+  --wa-blur-messages: 8px;
+  --wa-blur-previews: 6px;
+  --wa-blur-media: 15px;
+  --wa-blur-gallery: 15px;
+  --wa-blur-avatars: 10px;
+  --wa-blur-names: 10px;
+  --wa-transition-duration: 0s; /* Toggled dynamically between 0s and 0.2s */
+}
+
+/* --- 1. All messages in chat --- */
+html.wa-blur-messages-active [data-testid="msg-container"],
+html.wa-blur-messages-active .message-in .x1f6dt5p,
+html.wa-blur-messages-active .message-out .x1f6dt5p,
+html.wa-blur-messages-active .x126k92a.x1tlxs6b.x1g8br2z.x1gnnqk1.x1sidg6d.x1v116p5,
+html.wa-blur-messages-active .message-in span.selectable-text,
+html.wa-blur-messages-active .message-out span.selectable-text,
+html.wa-blur-messages-active div.copyable-text span.selectable-text {
+  filter: blur(var(--wa-blur-messages)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-messages-active [data-testid="msg-container"]:hover,
+html.wa-blur-messages-active .message-in .x1f6dt5p:hover,
+html.wa-blur-messages-active .message-out .x1f6dt5p:hover,
+html.wa-blur-messages-active .x126k92a.x1tlxs6b.x1g8br2z.x1gnnqk1.x1sidg6d.x1v116p5:hover,
+html.wa-blur-messages-active .message-in span.selectable-text:hover,
+html.wa-blur-messages-active .message-out span.selectable-text:hover,
+html.wa-blur-messages-active div.copyable-text span.selectable-text:hover {
+  filter: blur(0px) !important;
+}
+
+/* --- 2. Last messages preview --- */
+html.wa-blur-previews-active [data-testid="cell-frame-secondary"],
+html.wa-blur-previews-active [data-testid="chat-subtitle"],
+html.wa-blur-previews-active span[data-icon="text-status-v-double-check"] + span,
+html.wa-blur-previews-active span[data-icon="text-status-v-check"] + span,
+html.wa-blur-previews-active div[data-testid="last-msg-status"] + span,
+html.wa-blur-previews-active div[id="pane-side"] span.selectable-text,
+html.wa-blur-previews-active .x173jzuc.x1ri5ex2.x1am9s21.x19991ni.x1k4tb9n.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x13fuvv6.x1vncg7w.x1v8jcee.x136yj6b {
+  filter: blur(var(--wa-blur-previews)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-previews-active [data-testid="cell-frame-secondary"]:hover,
+html.wa-blur-previews-active [data-testid="chat-subtitle"]:hover,
+html.wa-blur-previews-active span[data-icon="text-status-v-double-check"] + span:hover,
+html.wa-blur-previews-active span[data-icon="text-status-v-check"] + span:hover,
+html.wa-blur-previews-active div[data-testid="last-msg-status"] + span:hover,
+html.wa-blur-previews-active div[id="pane-side"] span.selectable-text:hover,
+html.wa-blur-previews-active .x173jzuc.x1ri5ex2.x1am9s21.x19991ni.x1k4tb9n.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x13fuvv6.x1vncg7w.x1v8jcee.x136yj6b:hover {
+  filter: blur(0px) !important;
+}
+
+/* --- 3. Media preview (inside messages) --- */
+html.wa-blur-media-active [data-testid="msg-container"] img,
+html.wa-blur-media-active [data-testid="msg-container"] video,
+html.wa-blur-media-active [data-testid="msg-container"] canvas,
+html.wa-blur-media-active [data-testid="image-blur-wrapper"] img,
+html.wa-blur-media-active [data-testid="image-blur-wrapper"] video,
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"] img,
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"] video,
+html.wa-blur-media-active [data-testid="msg-container"] [style*="background-image"],
+html.wa-blur-media-active [data-testid="image-blur-wrapper"],
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"] {
+  filter: blur(var(--wa-blur-media)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-media-active [data-testid="msg-container"] img:hover,
+html.wa-blur-media-active [data-testid="msg-container"] video:hover,
+html.wa-blur-media-active [data-testid="msg-container"] canvas:hover,
+html.wa-blur-media-active [data-testid="image-blur-wrapper"] img:hover,
+html.wa-blur-media-active [data-testid="image-blur-wrapper"] video:hover,
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"] img:hover,
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"] video:hover,
+html.wa-blur-media-active [data-testid="msg-container"] [style*="background-image"]:hover,
+html.wa-blur-media-active [data-testid="image-blur-wrapper"]:hover,
+html.wa-blur-media-active [data-testid="media-canvas-wrapper"]:hover {
+  filter: blur(0px) !important;
+}
+
+/* --- 4. Media gallery (side panels, grid, sticker picker, etc.) --- */
+html.wa-blur-gallery-active div[data-testid="drawer-right"] img,
+html.wa-blur-gallery-active div[data-testid="drawer-right"] video,
+html.wa-blur-gallery-active div[data-testid="drawer-right"] [style*="background-image"],
+html.wa-blur-gallery-active [data-testid="media-gallery"] img,
+html.wa-blur-gallery-active [data-testid="shared-media-list"] img,
+html.wa-blur-gallery-active div[role="dialog"] img,
+html.wa-blur-gallery-active div[role="dialog"] video,
+html.wa-blur-gallery-active div[role="dialog"] [style*="background-image"] {
+  filter: blur(var(--wa-blur-gallery)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-gallery-active div[data-testid="drawer-right"] img:hover,
+html.wa-blur-gallery-active div[data-testid="drawer-right"] video:hover,
+html.wa-blur-gallery-active div[data-testid="drawer-right"] [style*="background-image"]:hover,
+html.wa-blur-gallery-active [data-testid="media-gallery"] img:hover,
+html.wa-blur-gallery-active [data-testid="shared-media-list"] img:hover,
+html.wa-blur-gallery-active div[role="dialog"] img:hover,
+html.wa-blur-gallery-active div[role="dialog"] video:hover,
+html.wa-blur-gallery-active div[role="dialog"] [style*="background-image"]:hover {
+  filter: blur(0px) !important;
+}
+
+/* --- 5. Text input --- */
+html.wa-blur-input-active footer [contenteditable="true"],
+html.wa-blur-input-active footer [role="textbox"],
+html.wa-blur-input-active footer .lexical-rich-text-input {
+  filter: blur(6px) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-input-active footer [contenteditable="true"]:hover,
+html.wa-blur-input-active footer [contenteditable="true"]:focus-within,
+html.wa-blur-input-active footer [role="textbox"]:hover,
+html.wa-blur-input-active footer [role="textbox"]:focus-within,
+html.wa-blur-input-active footer .lexical-rich-text-input:hover,
+html.wa-blur-input-active footer .lexical-rich-text-input:focus-within {
+  filter: blur(0px) !important;
+}
+
+/* --- 6. Profile pictures --- */
+html.wa-blur-avatars-active img[src*="t=s"], 
+html.wa-blur-avatars-active img[src*="dyn-icon"], 
+html.wa-blur-avatars-active div[data-testid="chat-avatar"] img, 
+html.wa-blur-avatars-active div[data-testid="avatar"] img, 
+html.wa-blur-avatars-active div[data-testid="avatar"], 
+html.wa-blur-avatars-active [data-testid="cell-frame-container"] img, 
+html.wa-blur-avatars-active [data-testid="conversation-info-header"] img, 
+html.wa-blur-avatars-active img.x14y5505 {
+  filter: blur(var(--wa-blur-avatars)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-avatars-active img[src*="t=s"]:hover, 
+html.wa-blur-avatars-active img[src*="dyn-icon"]:hover, 
+html.wa-blur-avatars-active div[data-testid="chat-avatar"] img:hover, 
+html.wa-blur-avatars-active div[data-testid="avatar"] img:hover, 
+html.wa-blur-avatars-active div[data-testid="avatar"]:hover, 
+html.wa-blur-avatars-active [data-testid="cell-frame-container"] img:hover, 
+html.wa-blur-avatars-active [data-testid="conversation-info-header"] img:hover, 
+html.wa-blur-avatars-active img.x14y5505:hover {
+  filter: blur(0px) !important;
+}
+
+/* --- 7. Group/Users names --- */
+html.wa-blur-names-active [data-testid="cell-frame-title"],
+html.wa-blur-names-active [data-testid="conversation-info-header-chat-title"],
+html.wa-blur-names-active span[data-testid="chat-subtitle"], 
+html.wa-blur-names-active header span[title], 
+html.wa-blur-names-active div[data-testid="cell-frame-container"] span[title], 
+html.wa-blur-names-active div[id="pane-side"] span[title] {
+  filter: blur(var(--wa-blur-names)) !important;
+  transition: filter var(--wa-transition-duration) ease !important;
+}
+
+html.wa-blur-names-active [data-testid="cell-frame-title"]:hover,
+html.wa-blur-names-active [data-testid="conversation-info-header-chat-title"]:hover,
+html.wa-blur-names-active span[data-testid="chat-subtitle"]:hover, 
+html.wa-blur-names-active header span[title]:hover, 
+html.wa-blur-names-active div[data-testid="cell-frame-container"] span[title]:hover, 
+html.wa-blur-names-active div[id="pane-side"] span[title]:hover {
+  filter: blur(0px) !important;
+}
+
+/* ==========================================================================
+   GLOBAL APP HOVER UNBLUR
+   ========================================================================== */
+html.wa-unblur-hover-active:hover * {
+  filter: none !important;
+}
+
+/* ==========================================================================
+   IDLE BLUR OVERLAY & PAGE BLUR
+   ========================================================================== */
+html.wa-idle-active #app {
+  filter: blur(25px) !important;
+  pointer-events: none !important;
+  transition: filter 0.4s ease !important;
+}
+
+#wa-privacy-idle-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647 !important;
+  background: rgba(17, 27, 33, 0.4);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#wa-privacy-idle-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#wa-privacy-idle-overlay .lock-box {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 30px 45px;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: lock-box-pulse 3s infinite ease-in-out;
+  max-width: 90%;
+  width: 320px;
+}
+
+@keyframes lock-box-pulse {
+  0% { transform: scale(1); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
+  50% { transform: scale(1.02); box-shadow: 0 12px 50px rgba(0, 168, 132, 0.15); }
+  100% { transform: scale(1); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
+}
+
+#wa-privacy-idle-overlay .lock-icon {
+  stroke: #00a884;
+  filter: drop-shadow(0 2px 10px rgba(0, 168, 132, 0.4));
+  margin-bottom: 4px;
+}
+
+#wa-privacy-idle-overlay h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+#wa-privacy-idle-overlay p {
+  font-size: 13px;
+  opacity: 0.8;
+  margin: 0;
+  line-height: 1.4;
+}
