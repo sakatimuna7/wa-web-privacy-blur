@@ -457,20 +457,47 @@
   // SHADOW READER / PEEK CHAT ORCHESTRATION
   // ==========================================================================
 
+  function simulateClick(element) {
+    if (!element) return;
+    const events = ['mousedown', 'mouseup', 'click'];
+    events.forEach(eventName => {
+      const ev = new MouseEvent(eventName, {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      });
+      element.dispatchEvent(ev);
+    });
+  }
+
   function scrapeCurrentChatMessages() {
     const list = [];
-    const els = document.querySelectorAll('[data-testid="msg-container"]');
+    
+    // Attempt multiple selectors for resilience
+    let els = document.querySelectorAll('[data-testid="msg-container"]');
+    if (els.length === 0) {
+      els = document.querySelectorAll('.message-in, .message-out');
+    }
+    if (els.length === 0) {
+      els = document.querySelectorAll('div[class*="message-in"], div[class*="message-out"]');
+    }
     
     els.forEach(el => {
-      const isIn = el.closest('.message-in') !== null;
-      const isOut = el.closest('.message-out') !== null;
+      const isIn = el.closest('.message-in') !== null || el.classList.contains('message-in') || el.className.includes('message-in');
+      const isOut = el.closest('.message-out') !== null || el.classList.contains('message-out') || el.className.includes('message-out');
       if (!isIn && !isOut) return; // skip system messages
       
-      const textEl = el.querySelector('span.selectable-text') || el.querySelector('.copyable-text span');
+      const textEl = el.querySelector('span.selectable-text') || 
+                     el.querySelector('.copyable-text span') || 
+                     el.querySelector('[data-testid="selectable-text"]') ||
+                     el.querySelector('span[class*="selectable-text"]');
       let text = textEl ? textEl.textContent : '';
       
       let time = '';
-      const timeEl = el.querySelector('.x1rg5xo7') || el.querySelector('span[dir="auto"]');
+      const timeEl = el.querySelector('.x1rg5xo7') || 
+                     el.querySelector('span[dir="auto"]') || 
+                     el.querySelector('div[class*="message-time"]') ||
+                     el.querySelector('span[class*="message-time"]');
       if (timeEl) {
         time = timeEl.textContent;
       } else {
@@ -483,7 +510,23 @@
         }
       }
       
-      const hasImage = el.querySelector('img') !== null;
+      // Determine if image (and verify it's not a small emoji image)
+      const allImgs = el.querySelectorAll('img');
+      let hasImage = el.querySelector('[data-testid="image-element"]') !== null || el.querySelector('img[src^="blob:"]') !== null;
+      if (!hasImage && allImgs.length > 0) {
+        for (const img of allImgs) {
+          const isEmoji = img.classList.contains('emoji') || 
+                          (img.className && typeof img.className === 'string' && img.className.includes('wa')) ||
+                          img.getAttribute('data-plain-text') || 
+                          (img.style.width === '20px') || 
+                          (img.height <= 24 && img.width <= 24);
+          if (!isEmoji) {
+            hasImage = true;
+            break;
+          }
+        }
+      }
+      
       const hasVideo = el.querySelector('video') !== null;
       const hasAudio = el.querySelector('audio') !== null || el.querySelector('[data-icon="audio-play"]') !== null;
       
@@ -564,7 +607,7 @@
           const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
           if (name === contactName) {
             const clickable = row.closest('[role="row"]') || row.closest('[class*="lhggkp7q"]') || row;
-            clickable.click();
+            simulateClick(clickable);
             break;
           }
         }
@@ -619,13 +662,25 @@
     
     showPeekModal(contactName);
     
-    window.postMessage({ source: 'wa-privacy-content', action: 'pause' }, '*');
-    clickable.click();
-    
-    setTimeout(() => {
+    if (originalChatName === contactName) {
       const messages = scrapeCurrentChatMessages();
       renderPeekMessages(contactName, messages);
-      
+      return;
+    }
+    
+    window.postMessage({ source: 'wa-privacy-content', action: 'pause' }, '*');
+    simulateClick(clickable);
+    
+    // Discard the queue after a brief moment to unpause WebSocket but drop the read receipt
+    setTimeout(() => {
+      window.postMessage({ source: 'wa-privacy-content', action: 'discard' }, '*');
+    }, 60);
+    
+    // Start polling to detect when the chat messages render
+    let pollCount = 0;
+    const maxPolls = 15; // 15 * 100ms = 1.5 seconds max
+    
+    function restoreOriginalChat() {
       if (originalChatName && originalChatName !== contactName) {
         const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
         let originalRowClickable = null;
@@ -641,17 +696,30 @@
             }
           }
         }
-        
         if (originalRowClickable) {
-          originalRowClickable.click();
+          setTimeout(() => {
+            simulateClick(originalRowClickable);
+          }, 50);
         }
       }
+    }
+
+    const pollInterval = setInterval(() => {
+      pollCount++;
+      const currentHeaderName = getActiveChatName();
+      const isTargetChatActive = currentHeaderName === contactName;
+      const messages = isTargetChatActive ? scrapeCurrentChatMessages() : [];
       
-      setTimeout(() => {
-        window.postMessage({ source: 'wa-privacy-content', action: 'discard' }, '*');
-      }, 50);
-      
-    }, 300);
+      if (isTargetChatActive && messages.length > 0) {
+        clearInterval(pollInterval);
+        renderPeekMessages(contactName, messages);
+        restoreOriginalChat();
+      } else if (pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+        renderPeekMessages(contactName, messages);
+        restoreOriginalChat();
+      }
+    }, 100);
   }
   function scanSelectiveChats() {
     if (!isExtensionActive) {
