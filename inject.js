@@ -19,8 +19,8 @@
     return originalSend.apply(this, arguments);
   };
 
-  // Sync listener via CustomEvent
-  window.addEventListener('wa-privacy-ws-control', (e) => {
+  // Sync listener via CustomEvent on document (crosses isolated-main world boundary)
+  document.addEventListener('wa-privacy-ws-control', (e) => {
     if (!e || !e.detail) return;
     const action = e.detail.action;
     handleAction(action);
@@ -38,8 +38,10 @@
     if (action === 'pause') {
       isWebSocketPaused = true;
       queuedSends = [];
+      console.log("[WA Privacy] WebSocket paused synchronously");
     } else if (action === 'resume') {
       isWebSocketPaused = false;
+      console.log(`[WA Privacy] WebSocket resumed synchronously. Flushing ${queuedSends.length} messages...`);
       queuedSends.forEach(item => {
         try {
           originalSend.apply(item.ws, item.args);
@@ -50,6 +52,7 @@
       queuedSends = [];
     } else if (action === 'discard') {
       isWebSocketPaused = false;
+      console.log(`[WA Privacy] WebSocket resumed synchronously. Discarding ${queuedSends.length} read receipts.`);
       queuedSends = [];
     }
   }

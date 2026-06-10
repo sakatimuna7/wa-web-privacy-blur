@@ -13,6 +13,12 @@
       "css": ["content.css"],
       "js": ["content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["inject.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
     }
   ],
   "action": {

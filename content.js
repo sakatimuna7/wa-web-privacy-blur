@@ -5,18 +5,7 @@
 (function () {
   console.log("WA Web Privacy Blur Aktif, Bre!");
 
-  // Inject WebSocket interceptor script into the page context
-  const injectScript = () => {
-    try {
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('inject.js');
-      script.onload = () => script.remove();
-      (document.head || document.documentElement).appendChild(script);
-    } catch (e) {
-      console.error("[WA Privacy] Error injecting ws interceptor:", e);
-    }
-  };
-  injectScript();
+  // Injeksi inject.js dilakukan otomatis via manifest.json MAIN world, bre!
 
   // Defaults matching popup.js
   const defaults = {
@@ -458,7 +447,7 @@
   // ==========================================================================
 
   function sendWSControl(action) {
-    window.dispatchEvent(new CustomEvent('wa-privacy-ws-control', {
+    document.dispatchEvent(new CustomEvent('wa-privacy-ws-control', {
       detail: { action: action }
     }));
   }
@@ -692,6 +681,9 @@
       return;
     }
     
+    // Hide the chat pane to avoid flicker
+    document.documentElement.classList.add('wa-peeking-active');
+    
     console.log("[WA Privacy] Synchronously pausing WebSocket...");
     sendWSControl('pause');
     
@@ -709,6 +701,10 @@
     const maxPolls = 20; // 20 * 100ms = 2.0 seconds max
     
     function restoreOriginalChat() {
+      const cleanUp = () => {
+        document.documentElement.classList.remove('wa-peeking-active');
+      };
+
       if (originalChatName && normOriginal !== normContact) {
         console.log("[WA Privacy] Restoring original chat:", originalChatName);
         const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
@@ -729,8 +725,13 @@
           setTimeout(() => {
             console.log("[WA Privacy] Clicking original chat element...");
             simulateClick(originalRowClickable);
+            setTimeout(cleanUp, 100);
           }, 80);
+        } else {
+          cleanUp();
         }
+      } else {
+        cleanUp();
       }
     }
 

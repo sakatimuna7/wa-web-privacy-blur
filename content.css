@@ -927,3 +927,10 @@ html.theme-dark .peek-footer,
 .peek-footer svg {
   color: #00a884;
 }
+
+/* Hide right pane (active chat / welcome screen) during secret peek switch */
+html.wa-peeking-active #main,
+html.wa-peeking-active [data-testid="intro-text"],
+html.wa-peeking-active [data-testid="conversation-panel-wrapper"] {
+  visibility: hidden !important;
+}
