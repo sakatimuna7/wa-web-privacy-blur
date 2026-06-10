@@ -682,6 +682,14 @@
             toggleChatLock(currentName);
           }
         });
+        lockBtn.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        });
+        lockBtn.addEventListener('mouseup', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        });
         container.appendChild(lockBtn);
       }
       lockBtn.setAttribute('data-name', name);
@@ -705,6 +713,14 @@
           if (currentName) {
             peekChat(currentName, container);
           }
+        });
+        peekBtn.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        });
+        peekBtn.addEventListener('mouseup', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
         });
         container.appendChild(peekBtn);
       }
