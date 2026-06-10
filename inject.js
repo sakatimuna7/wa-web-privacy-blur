@@ -19,35 +19,38 @@
     return originalSend.apply(this, arguments);
   };
 
-  // Listen for control messages from the content script
+  // Sync listener via CustomEvent
+  window.addEventListener('wa-privacy-ws-control', (e) => {
+    if (!e || !e.detail) return;
+    const action = e.detail.action;
+    handleAction(action);
+  });
+
+  // Listen for control messages from the content script (async fallback)
   window.addEventListener('message', (event) => {
-    // Only accept messages from our content script
     if (event.source !== window) return;
     if (event.data && event.data.source === 'wa-privacy-content') {
-      const action = event.data.action;
-
-      if (action === 'pause') {
-        isWebSocketPaused = true;
-        queuedSends = [];
-        // console.log("[WA Privacy] WebSocket paused");
-      } else if (action === 'resume') {
-        isWebSocketPaused = false;
-        // Flush all queued sends
-        // console.log(`[WA Privacy] WebSocket resumed. Flushing ${queuedSends.length} queued messages...`);
-        queuedSends.forEach(item => {
-          try {
-            originalSend.apply(item.ws, item.args);
-          } catch (e) {
-            console.error("[WA Privacy] Error flushing queued message:", e);
-          }
-        });
-        queuedSends = [];
-      } else if (action === 'discard') {
-        isWebSocketPaused = false;
-        // console.log(`[WA Privacy] WebSocket resumed. Discarded ${queuedSends.length} queued messages!`);
-        // Just empty the array and don't send anything
-        queuedSends = [];
-      }
+      handleAction(event.data.action);
     }
   });
+
+  function handleAction(action) {
+    if (action === 'pause') {
+      isWebSocketPaused = true;
+      queuedSends = [];
+    } else if (action === 'resume') {
+      isWebSocketPaused = false;
+      queuedSends.forEach(item => {
+        try {
+          originalSend.apply(item.ws, item.args);
+        } catch (e) {
+          console.error("[WA Privacy] Error flushing queued message:", e);
+        }
+      });
+      queuedSends = [];
+    } else if (action === 'discard') {
+      isWebSocketPaused = false;
+      queuedSends = [];
+    }
+  }
 })();

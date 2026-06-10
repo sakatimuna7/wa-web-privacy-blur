@@ -457,6 +457,20 @@
   // SHADOW READER / PEEK CHAT ORCHESTRATION
   // ==========================================================================
 
+  function sendWSControl(action) {
+    window.dispatchEvent(new CustomEvent('wa-privacy-ws-control', {
+      detail: { action: action }
+    }));
+  }
+
+  function normalizeName(name) {
+    if (!name) return '';
+    // Strip emojis
+    let clean = name.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDFFF]/g, '');
+    // Lowercase, trim and replace multiple spaces/punctuations with single space
+    return clean.toLowerCase().replace(/[\s\p{P}]/gu, ' ').trim().replace(/\s+/g, ' ');
+  }
+
   function simulateClick(element) {
     if (!element) return;
     const events = ['mousedown', 'mouseup', 'click'];
@@ -599,14 +613,15 @@
     modal.querySelector('#wa-peek-mark-read').onclick = () => {
       modal.classList.remove('visible');
       const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
+      const normContact = normalizeName(contactName);
       for (const row of allRows) {
         const titleEl = row.querySelector('[data-testid="cell-frame-title"] span[title]') || 
                         row.querySelector('[data-testid="cell-frame-title"]') || 
                         row.querySelector('span[title]');
         if (titleEl) {
           const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
-          if (name === contactName) {
-            const clickable = row.closest('[role="row"]') || row.closest('[class*="lhggkp7q"]') || row;
+          if (normalizeName(name) === normContact) {
+            const clickable = row.querySelector('[data-testid="cell-frame-title"]') || row;
             simulateClick(clickable);
             break;
           }
@@ -658,30 +673,44 @@
 
   function peekChat(contactName, container) {
     const originalChatName = getActiveChatName();
-    const clickable = container.closest('[role="row"]') || container.closest('[class*="lhggkp7q"]') || container;
+    
+    // Click on the title element or the container directly (ensuring events bubble up correctly)
+    const clickable = container.querySelector('[data-testid="cell-frame-title"]') || container;
+    
+    console.log("[WA Privacy] Peek Chat initiated for:", contactName);
+    console.log("[WA Privacy] Original Chat name:", originalChatName);
     
     showPeekModal(contactName);
     
-    if (originalChatName === contactName) {
+    const normContact = normalizeName(contactName);
+    const normOriginal = normalizeName(originalChatName);
+    
+    if (normOriginal && normContact && normOriginal === normContact) {
+      console.log("[WA Privacy] Chat is already open. Scraping messages immediately.");
       const messages = scrapeCurrentChatMessages();
       renderPeekMessages(contactName, messages);
       return;
     }
     
-    window.postMessage({ source: 'wa-privacy-content', action: 'pause' }, '*');
+    console.log("[WA Privacy] Synchronously pausing WebSocket...");
+    sendWSControl('pause');
+    
+    console.log("[WA Privacy] Dispatching click to open target chat...");
     simulateClick(clickable);
     
     // Discard the queue after a brief moment to unpause WebSocket but drop the read receipt
     setTimeout(() => {
-      window.postMessage({ source: 'wa-privacy-content', action: 'discard' }, '*');
+      console.log("[WA Privacy] Discarding queued packets and resuming WebSocket...");
+      sendWSControl('discard');
     }, 60);
     
     // Start polling to detect when the chat messages render
     let pollCount = 0;
-    const maxPolls = 15; // 15 * 100ms = 1.5 seconds max
+    const maxPolls = 20; // 20 * 100ms = 2.0 seconds max
     
     function restoreOriginalChat() {
-      if (originalChatName && originalChatName !== contactName) {
+      if (originalChatName && normOriginal !== normContact) {
+        console.log("[WA Privacy] Restoring original chat:", originalChatName);
         const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
         let originalRowClickable = null;
         for (const row of allRows) {
@@ -690,16 +719,17 @@
                           row.querySelector('span[title]');
           if (titleEl) {
             const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
-            if (name === originalChatName) {
-              originalRowClickable = row.closest('[role="row"]') || row.closest('[class*="lhggkp7q"]') || row;
+            if (normalizeName(name) === normOriginal) {
+              originalRowClickable = row.querySelector('[data-testid="cell-frame-title"]') || row;
               break;
             }
           }
         }
         if (originalRowClickable) {
           setTimeout(() => {
+            console.log("[WA Privacy] Clicking original chat element...");
             simulateClick(originalRowClickable);
-          }, 50);
+          }, 80);
         }
       }
     }
@@ -707,15 +737,20 @@
     const pollInterval = setInterval(() => {
       pollCount++;
       const currentHeaderName = getActiveChatName();
-      const isTargetChatActive = currentHeaderName === contactName;
+      const normHeader = normalizeName(currentHeaderName);
+      const isTargetChatActive = normHeader === normContact;
       const messages = isTargetChatActive ? scrapeCurrentChatMessages() : [];
+      
+      console.log(`[WA Privacy] Poll #${pollCount}. Header: "${currentHeaderName}" (Norm: "${normHeader}"). Target: "${normContact}". Active: ${isTargetChatActive}. Messages: ${messages.length}`);
       
       if (isTargetChatActive && messages.length > 0) {
         clearInterval(pollInterval);
+        console.log("[WA Privacy] Messages successfully loaded. Rendering...");
         renderPeekMessages(contactName, messages);
         restoreOriginalChat();
       } else if (pollCount >= maxPolls) {
         clearInterval(pollInterval);
+        console.log("[WA Privacy] Polling timed out. Rendering empty list...");
         renderPeekMessages(contactName, messages);
         restoreOriginalChat();
       }
