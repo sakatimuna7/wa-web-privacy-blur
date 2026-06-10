@@ -581,3 +581,349 @@ html.wa-active-chat-locked .message-out span.selectable-text:hover,
 html.wa-active-chat-locked div.copyable-text span.selectable-text:hover {
   filter: none !important;
 }
+
+/* ==========================================================================
+   SHADOW READER / PEEK CHAT MODAL
+   ========================================================================== */
+
+/* 1. Selective Peek Button positioning & styles */
+.wa-selective-peek-btn {
+  position: absolute;
+  right: 44px; /* positioned next to the lock button */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(240, 242, 245, 0.9); /* light mode default */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #8696a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.wa-selective-peek-btn svg {
+  pointer-events: none;
+}
+
+/* Hovering over the row reveals both buttons */
+[data-testid="cell-frame-container"]:hover .wa-selective-peek-btn {
+  opacity: 0.85;
+}
+
+.wa-selective-peek-btn:hover {
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.1);
+  color: #00a884 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.2);
+}
+
+.wa-selective-peek-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Dark mode overrides for Peek button */
+.theme-dark .wa-selective-peek-btn,
+html.theme-dark .wa-selective-peek-btn,
+:root[class*="theme-dark"] .wa-selective-peek-btn {
+  background: rgba(30, 42, 49, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #aebac1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.theme-dark .wa-selective-peek-btn:hover,
+html.theme-dark .wa-selective-peek-btn:hover,
+:root[class*="theme-dark"] .wa-selective-peek-btn:hover {
+  background-color: #202c33 !important;
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+}
+
+/* 2. Peek Modal Styling */
+#wa-privacy-peek-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483640 !important; /* right below the idle overlay */
+  background: rgba(17, 27, 33, 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#wa-privacy-peek-modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#wa-privacy-peek-modal .peek-container {
+  background: #ffffff; /* light mode */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+  width: 420px;
+  max-width: 90%;
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#wa-privacy-peek-modal.visible .peek-container {
+  transform: scale(1);
+}
+
+/* Dark mode for Peek Modal */
+.theme-dark #wa-privacy-peek-modal .peek-container,
+html.theme-dark #wa-privacy-peek-modal .peek-container,
+:root[class*="theme-dark"] #wa-privacy-peek-modal .peek-container {
+  background: #222e35;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e9edef;
+}
+
+/* Header */
+.peek-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(240, 242, 245, 0.4);
+}
+
+.theme-dark .peek-header,
+html.theme-dark .peek-header,
+:root[class*="theme-dark"] .peek-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: rgba(32, 44, 51, 0.4);
+}
+
+.peek-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.peek-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.peek-title span {
+  font-size: 11px;
+  color: #00a884;
+  font-weight: 600;
+}
+
+.peek-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.peek-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: #667781;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.theme-dark .peek-btn,
+html.theme-dark .peek-btn,
+:root[class*="theme-dark"] .peek-btn {
+  color: #aebac1;
+}
+
+.peek-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111b21;
+}
+
+.theme-dark .peek-btn:hover,
+html.theme-dark .peek-btn:hover,
+:root[class*="theme-dark"] .peek-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9edef;
+}
+
+.peek-btn.mark-read:hover {
+  color: #00a884;
+  background: rgba(0, 168, 132, 0.1);
+}
+
+/* Message Area */
+.peek-messages-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #efeae2; /* classic WA background */
+}
+
+.theme-dark .peek-messages-area,
+html.theme-dark .peek-messages-area,
+:root[class*="theme-dark"] .peek-messages-area {
+  background: #0b141a; /* dark mode WA background */
+}
+
+/* Loading state */
+.peek-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  color: #667781;
+  font-weight: 500;
+}
+
+.theme-dark .peek-loading,
+html.theme-dark .peek-loading,
+:root[class*="theme-dark"] .peek-loading {
+  color: #8696a0;
+}
+
+.peek-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(0, 168, 132, 0.2);
+  border-top-color: #00a884;
+  border-radius: 50%;
+  animation: peek-spin 0.8s linear infinite;
+}
+
+@keyframes peek-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Bubble Messages */
+.peek-bubble {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  position: relative;
+  word-break: break-word;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.peek-bubble.in {
+  align-self: flex-start;
+  background: #ffffff;
+  color: #111b21;
+  border-top-left-radius: 0;
+}
+
+.theme-dark .peek-bubble.in,
+html.theme-dark .peek-bubble.in,
+:root[class*="theme-dark"] .peek-bubble.in {
+  background: #202c33;
+  color: #e9edef;
+}
+
+.peek-bubble.out {
+  align-self: flex-end;
+  background: #d9fdd3;
+  color: #111b21;
+  border-top-right-radius: 0;
+}
+
+.theme-dark .peek-bubble.out,
+html.theme-dark .peek-bubble.out,
+:root[class*="theme-dark"] .peek-bubble.out {
+  background: #005c4b;
+  color: #e9edef;
+}
+
+.peek-bubble .time {
+  font-size: 9.5px;
+  color: #667781;
+  align-self: flex-end;
+  margin-top: 2px;
+}
+
+.theme-dark .peek-bubble .time,
+html.theme-dark .peek-bubble .time,
+:root[class*="theme-dark"] .peek-bubble .time {
+  color: #8696a0;
+}
+
+.peek-bubble.out .time {
+  color: #667781;
+}
+
+.theme-dark .peek-bubble.out .time,
+html.theme-dark .peek-bubble.out .time,
+:root[class*="theme-dark"] .peek-bubble.out .time {
+  color: #8696a0;
+}
+
+/* Media indicators inside bubbles */
+.peek-media-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #00a884;
+  font-size: 12px;
+}
+
+/* Footer / Warning Banner */
+.peek-footer {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  color: #667781;
+  background: rgba(240, 242, 245, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.theme-dark .peek-footer,
+html.theme-dark .peek-footer,
+:root[class*="theme-dark"] .peek-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  background: rgba(32, 44, 51, 0.4);
+  color: #8696a0;
+}
+
+.peek-footer svg {
+  color: #00a884;
+}

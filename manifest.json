@@ -37,5 +37,11 @@
       },
       "description": "Aktifkan/Matikan Privacy Blur secara instan"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["https://web.whatsapp.com/*"]
+    }
+  ]
 }

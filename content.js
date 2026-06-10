@@ -5,6 +5,19 @@
 (function () {
   console.log("WA Web Privacy Blur Aktif, Bre!");
 
+  // Inject WebSocket interceptor script into the page context
+  const injectScript = () => {
+    try {
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('inject.js');
+      script.onload = () => script.remove();
+      (document.head || document.documentElement).appendChild(script);
+    } catch (e) {
+      console.error("[WA Privacy] Error injecting ws interceptor:", e);
+    }
+  };
+  injectScript();
+
   // Defaults matching popup.js
   const defaults = {
     mainActive: true,
@@ -434,10 +447,212 @@
 
   function removeSelectiveLocks() {
     document.querySelectorAll('.wa-selective-lock-btn').forEach(btn => btn.remove());
+    document.querySelectorAll('.wa-selective-peek-btn').forEach(btn => btn.remove());
     document.querySelectorAll('.wa-row-locked').forEach(row => row.classList.remove('wa-row-locked'));
     document.documentElement.classList.remove('wa-active-chat-locked');
+    const peekModal = document.getElementById('wa-privacy-peek-modal');
+    if (peekModal) peekModal.remove();
+  }
+  // ==========================================================================
+  // SHADOW READER / PEEK CHAT ORCHESTRATION
+  // ==========================================================================
+
+  function scrapeCurrentChatMessages() {
+    const list = [];
+    const els = document.querySelectorAll('[data-testid="msg-container"]');
+    
+    els.forEach(el => {
+      const isIn = el.closest('.message-in') !== null;
+      const isOut = el.closest('.message-out') !== null;
+      if (!isIn && !isOut) return; // skip system messages
+      
+      const textEl = el.querySelector('span.selectable-text') || el.querySelector('.copyable-text span');
+      let text = textEl ? textEl.textContent : '';
+      
+      let time = '';
+      const timeEl = el.querySelector('.x1rg5xo7') || el.querySelector('span[dir="auto"]');
+      if (timeEl) {
+        time = timeEl.textContent;
+      } else {
+        const spans = el.querySelectorAll('span');
+        for (const s of spans) {
+          if (/^\d{1,2}:\d{2}(\s?[ap]m)?$/i.test(s.textContent.trim())) {
+            time = s.textContent.trim();
+            break;
+          }
+        }
+      }
+      
+      const hasImage = el.querySelector('img') !== null;
+      const hasVideo = el.querySelector('video') !== null;
+      const hasAudio = el.querySelector('audio') !== null || el.querySelector('[data-icon="audio-play"]') !== null;
+      
+      list.push({
+        dir: isIn ? 'in' : 'out',
+        text: text,
+        time: time,
+        hasImage: hasImage,
+        hasVideo: hasVideo,
+        hasAudio: hasAudio
+      });
+    });
+    
+    return list.slice(-15);
   }
 
+  function showPeekModal(contactName) {
+    let modal = document.getElementById('wa-privacy-peek-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'wa-privacy-peek-modal';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="peek-container">
+        <div class="peek-header">
+          <div class="peek-title">
+            <h3>Intip Chat: ${contactName}</h3>
+            <span>Mode Penyamaran Aktif</span>
+          </div>
+          <div class="peek-actions">
+            <button class="peek-btn mark-read" id="wa-peek-mark-read" title="Tandai Telah Dibaca & Buka">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+            </button>
+            <button class="peek-btn" id="wa-peek-close" title="Tutup">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="peek-messages-area" id="wa-peek-messages-body">
+          <div class="peek-loading">
+            <div class="peek-spinner"></div>
+            <span>Menghubungkan & Membaca Chat...</span>
+          </div>
+        </div>
+        <div class="peek-footer">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Dibaca secara rahasia. Pengirim tidak mendapat centang biru.</span>
+        </div>
+      </div>
+    `;
+    
+    modal.classList.add('visible');
+    
+    // Close listener
+    modal.querySelector('#wa-peek-close').onclick = () => {
+      modal.classList.remove('visible');
+    };
+    
+    // Mark as read listener
+    modal.querySelector('#wa-peek-mark-read').onclick = () => {
+      modal.classList.remove('visible');
+      const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
+      for (const row of allRows) {
+        const titleEl = row.querySelector('[data-testid="cell-frame-title"] span[title]') || 
+                        row.querySelector('[data-testid="cell-frame-title"]') || 
+                        row.querySelector('span[title]');
+        if (titleEl) {
+          const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+          if (name === contactName) {
+            const clickable = row.closest('[role="row"]') || row.closest('[class*="lhggkp7q"]') || row;
+            clickable.click();
+            break;
+          }
+        }
+      }
+    };
+  }
+
+  function renderPeekMessages(contactName, messages) {
+    const body = document.getElementById('wa-peek-messages-body');
+    if (!body) return;
+    
+    if (messages.length === 0) {
+      body.innerHTML = `
+        <div class="peek-loading">
+          <span>Tidak ada pesan dalam obrolan ini, bre.</span>
+        </div>
+      `;
+      return;
+    }
+    
+    body.innerHTML = '';
+    messages.forEach(msg => {
+      const bubble = document.createElement('div');
+      bubble.className = `peek-bubble ${msg.dir}`;
+      
+      let contentHtml = '';
+      if (msg.hasImage) {
+        contentHtml += `<div class="peek-media-indicator">📷 Foto</div>`;
+      } else if (msg.hasVideo) {
+        contentHtml += `<div class="peek-media-indicator">🎥 Video</div>`;
+      } else if (msg.hasAudio) {
+        contentHtml += `<div class="peek-media-indicator">🎵 Audio</div>`;
+      }
+      
+      if (msg.text) {
+        contentHtml += `<div>${msg.text}</div>`;
+      } else if (!msg.hasImage && !msg.hasVideo && !msg.hasAudio) {
+        contentHtml += `<div><i>Pesan tidak didukung</i></div>`;
+      }
+      
+      contentHtml += `<span class="time">${msg.time}</span>`;
+      bubble.innerHTML = contentHtml;
+      body.appendChild(bubble);
+    });
+    
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function peekChat(contactName, container) {
+    const originalChatName = getActiveChatName();
+    const clickable = container.closest('[role="row"]') || container.closest('[class*="lhggkp7q"]') || container;
+    
+    showPeekModal(contactName);
+    
+    window.postMessage({ source: 'wa-privacy-content', action: 'pause' }, '*');
+    clickable.click();
+    
+    setTimeout(() => {
+      const messages = scrapeCurrentChatMessages();
+      renderPeekMessages(contactName, messages);
+      
+      if (originalChatName && originalChatName !== contactName) {
+        const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
+        let originalRowClickable = null;
+        for (const row of allRows) {
+          const titleEl = row.querySelector('[data-testid="cell-frame-title"] span[title]') || 
+                          row.querySelector('[data-testid="cell-frame-title"]') || 
+                          row.querySelector('span[title]');
+          if (titleEl) {
+            const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+            if (name === originalChatName) {
+              originalRowClickable = row.closest('[role="row"]') || row.closest('[class*="lhggkp7q"]') || row;
+              break;
+            }
+          }
+        }
+        
+        if (originalRowClickable) {
+          originalRowClickable.click();
+        }
+      }
+      
+      setTimeout(() => {
+        window.postMessage({ source: 'wa-privacy-content', action: 'discard' }, '*');
+      }, 50);
+      
+    }, 300);
+  }
   function scanSelectiveChats() {
     if (!isExtensionActive) {
       removeSelectiveLocks();
@@ -454,6 +669,7 @@
       const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
       if (!name) return;
 
+      // Lock Button
       let lockBtn = container.querySelector('.wa-selective-lock-btn');
       if (!lockBtn) {
         lockBtn = document.createElement('div');
@@ -468,6 +684,31 @@
         });
         container.appendChild(lockBtn);
       }
+      lockBtn.setAttribute('data-name', name);
+
+      // Peek Button (Shadow Reader)
+      let peekBtn = container.querySelector('.wa-selective-peek-btn');
+      if (!peekBtn) {
+        peekBtn = document.createElement('div');
+        peekBtn.className = 'wa-selective-peek-btn';
+        peekBtn.title = 'Intip Chat (Tanpa Centang Biru)';
+        peekBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        `;
+        peekBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const currentName = peekBtn.getAttribute('data-name');
+          if (currentName) {
+            peekChat(currentName, container);
+          }
+        });
+        container.appendChild(peekBtn);
+      }
+      peekBtn.setAttribute('data-name', name);
 
       lockBtn.setAttribute('data-name', name);
 
