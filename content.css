@@ -586,65 +586,64 @@ html.wa-active-chat-locked div.copyable-text span.selectable-text:hover {
    SHADOW READER / PEEK CHAT MODAL
    ========================================================================== */
 
-/* 1. Selective Peek Button positioning & styles */
-.wa-selective-peek-btn {
-  position: absolute;
-  right: 44px; /* positioned next to the lock button */
-  top: 50%;
-  transform: translateY(-50%);
+/* 2. Floating Global Peek Button (di body, di luar DOM WA) */
+#wa-float-peek-btn {
+  position: fixed;
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(240, 242, 245, 0.9); /* light mode default */
+  background: rgba(240, 242, 245, 0.97);
   border: 1px solid rgba(0, 0, 0, 0.08);
   color: #8696a0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
+  z-index: 99990;
   opacity: 0;
-  pointer-events: auto;
-  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.85);
+  transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.wa-selective-peek-btn svg {
+#wa-float-peek-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+#wa-float-peek-btn:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+  color: #00a884;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 168, 132, 0.25);
+}
+
+#wa-float-peek-btn:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+#wa-float-peek-btn svg {
   pointer-events: none;
 }
 
-/* Hovering over the row reveals both buttons */
-[data-testid="cell-frame-container"]:hover .wa-selective-peek-btn {
-  opacity: 0.85;
-}
-
-.wa-selective-peek-btn:hover {
-  opacity: 1 !important;
-  transform: translateY(-50%) scale(1.1);
-  color: #00a884 !important;
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.2);
-}
-
-.wa-selective-peek-btn:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-/* Dark mode overrides for Peek button */
-.theme-dark .wa-selective-peek-btn,
-html.theme-dark .wa-selective-peek-btn,
-:root[class*="theme-dark"] .wa-selective-peek-btn {
-  background: rgba(30, 42, 49, 0.95);
+/* Dark mode */
+.theme-dark #wa-float-peek-btn,
+html.theme-dark #wa-float-peek-btn,
+:root[class*="theme-dark"] #wa-float-peek-btn {
+  background: rgba(30, 42, 49, 0.97);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #aebac1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.theme-dark .wa-selective-peek-btn:hover,
-html.theme-dark .wa-selective-peek-btn:hover,
-:root[class*="theme-dark"] .wa-selective-peek-btn:hover {
-  background-color: #202c33 !important;
-  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+.theme-dark #wa-float-peek-btn:hover,
+html.theme-dark #wa-float-peek-btn:hover,
+:root[class*="theme-dark"] #wa-float-peek-btn:hover {
+  background-color: #202c33;
+  box-shadow: 0 2px 10px rgba(0, 168, 132, 0.3);
 }
 
 /* 2. Peek Modal Styling */

@@ -436,11 +436,13 @@
 
   function removeSelectiveLocks() {
     document.querySelectorAll('.wa-selective-lock-btn').forEach(btn => btn.remove());
-    document.querySelectorAll('.wa-selective-peek-btn').forEach(btn => btn.remove());
     document.querySelectorAll('.wa-row-locked').forEach(row => row.classList.remove('wa-row-locked'));
     document.documentElement.classList.remove('wa-active-chat-locked');
     const peekModal = document.getElementById('wa-privacy-peek-modal');
     if (peekModal) peekModal.remove();
+    // Sembunyikan floating peek button
+    const floatBtn = document.getElementById('wa-float-peek-btn');
+    if (floatBtn) floatBtn.remove();
   }
   // ==========================================================================
   // SHADOW READER / PEEK CHAT ORCHESTRATION
@@ -476,34 +478,72 @@
   function scrapeCurrentChatMessages() {
     const list = [];
     
-    // Attempt multiple selectors for resilience
+    // --- Strategy 1: data-testid="msg-container" (classic WA Web)
     let els = document.querySelectorAll('[data-testid="msg-container"]');
+    
+    // --- Strategy 2: role="row" inside main chat pane
+    if (els.length === 0) {
+      const pane = document.querySelector('[data-testid="conversation-panel-messages"]') ||
+                   document.querySelector('main') ||
+                   document.querySelector('#main');
+      if (pane) {
+        els = pane.querySelectorAll('[role="row"]');
+      }
+    }
+
+    // --- Strategy 3: class partial match
     if (els.length === 0) {
       els = document.querySelectorAll('.message-in, .message-out');
     }
     if (els.length === 0) {
       els = document.querySelectorAll('div[class*="message-in"], div[class*="message-out"]');
     }
+
+    // --- Strategy 4: copyable-text containers (works on newer WA Web builds)
+    if (els.length === 0) {
+      els = document.querySelectorAll('[data-pre-plain-text]');
+    }
+
+    console.log(`[WA Privacy] scrapeCurrentChatMessages: found ${els.length} message elements`);
     
     els.forEach(el => {
-      const isIn = el.closest('.message-in') !== null || el.classList.contains('message-in') || el.className.includes('message-in');
-      const isOut = el.closest('.message-out') !== null || el.classList.contains('message-out') || el.className.includes('message-out');
-      if (!isIn && !isOut) return; // skip system messages
-      
-      const textEl = el.querySelector('span.selectable-text') || 
-                     el.querySelector('.copyable-text span') || 
+      // Determine direction
+      const isIn = el.closest('.message-in') !== null ||
+                   el.classList.contains('message-in') ||
+                   (typeof el.className === 'string' && el.className.includes('message-in')) ||
+                   el.querySelector('[data-testid="msg-dblcheck"]') === null &&
+                     el.querySelector('[data-testid="msg-check"]') === null &&
+                     el.querySelector('[data-pre-plain-text]') !== null;
+      const isOut = el.closest('.message-out') !== null ||
+                    el.classList.contains('message-out') ||
+                    (typeof el.className === 'string' && el.className.includes('message-out')) ||
+                    el.querySelector('[data-testid="msg-dblcheck"]') !== null ||
+                    el.querySelector('[data-testid="msg-check"]') !== null;
+
+      // Extract text — try multiple strategies
+      const textEl = el.querySelector('span.selectable-text') ||
                      el.querySelector('[data-testid="selectable-text"]') ||
-                     el.querySelector('span[class*="selectable-text"]');
-      let text = textEl ? textEl.textContent : '';
-      
+                     el.querySelector('span[class*="selectable-text"]') ||
+                     el.querySelector('.copyable-text span') ||
+                     el.querySelector('span[dir="ltr"]') ||
+                     el.querySelector('span[dir="rtl"]') ||
+                     el.querySelector('span[dir="auto"]');
+      let text = textEl ? textEl.textContent.trim() : '';
+
+      // If still no text, try data-pre-plain-text attribute on parent
+      const prePlainParent = el.closest('[data-pre-plain-text]') || el.querySelector('[data-pre-plain-text]');
+      let prePlainText = prePlainParent ? prePlainParent.getAttribute('data-pre-plain-text') : '';
+
+      // Extract time
       let time = '';
-      const timeEl = el.querySelector('.x1rg5xo7') || 
-                     el.querySelector('span[dir="auto"]') || 
-                     el.querySelector('div[class*="message-time"]') ||
-                     el.querySelector('span[class*="message-time"]');
+      // Try dedicated time element first
+      const timeEl = el.querySelector('[data-testid="msg-meta"] span') ||
+                     el.querySelector('span[data-testid="msg-time"]') ||
+                     el.querySelector('.x1rg5xo7');
       if (timeEl) {
-        time = timeEl.textContent;
+        time = timeEl.textContent.trim();
       } else {
+        // Fallback: look for HH:MM pattern in all spans
         const spans = el.querySelectorAll('span');
         for (const s of spans) {
           if (/^\d{1,2}:\d{2}(\s?[ap]m)?$/i.test(s.textContent.trim())) {
@@ -511,31 +551,39 @@
             break;
           }
         }
+        // Also try extracting from data-pre-plain-text (e.g. "[10:30, 13/6/2026] Name: ")
+        if (!time && prePlainText) {
+          const m = prePlainText.match(/\[(\d{1,2}:\d{2}[^\]]*?)\]/);
+          if (m) time = m[1].split(',')[0].trim();
+        }
       }
       
-      // Determine if image (and verify it's not a small emoji image)
+      // Determine media
       const allImgs = el.querySelectorAll('img');
-      let hasImage = el.querySelector('[data-testid="image-element"]') !== null || el.querySelector('img[src^="blob:"]') !== null;
+      let hasImage = el.querySelector('[data-testid="image-element"]') !== null ||
+                     el.querySelector('img[src^="blob:"]') !== null;
       if (!hasImage && allImgs.length > 0) {
         for (const img of allImgs) {
           const isEmoji = img.classList.contains('emoji') || 
                           (img.className && typeof img.className === 'string' && img.className.includes('wa')) ||
                           img.getAttribute('data-plain-text') || 
-                          (img.style.width === '20px') || 
+                          img.getAttribute('alt') ||
                           (img.height <= 24 && img.width <= 24);
-          if (!isEmoji) {
-            hasImage = true;
-            break;
-          }
+          if (!isEmoji) { hasImage = true; break; }
         }
       }
       
       const hasVideo = el.querySelector('video') !== null;
-      const hasAudio = el.querySelector('audio') !== null || el.querySelector('[data-icon="audio-play"]') !== null;
+      const hasAudio = el.querySelector('audio') !== null ||
+                       el.querySelector('[data-icon="audio-play"]') !== null ||
+                       el.querySelector('[data-testid="audio-player"]') !== null;
       
+      // Only include if has some content
+      if (!text && !prePlainText && !hasImage && !hasVideo && !hasAudio) return;
+
       list.push({
-        dir: isIn ? 'in' : 'out',
-        text: text,
+        dir: isOut ? 'out' : 'in',
+        text: text || '',
         time: time,
         hasImage: hasImage,
         hasVideo: hasVideo,
@@ -543,6 +591,7 @@
       });
     });
     
+    console.log(`[WA Privacy] scrapeCurrentChatMessages: parsed ${list.length} messages`);
     return list.slice(-15);
   }
 
@@ -663,8 +712,10 @@
   function peekChat(contactName, container) {
     const originalChatName = getActiveChatName();
     
-    // Click on the title element or the container directly (ensuring events bubble up correctly)
-    const clickable = container.querySelector('[data-testid="cell-frame-title"]') || container;
+    // Find the most reliable clickable element in the chat row
+    const clickable = container.querySelector('[data-testid="cell-frame-title"]') ||
+                      container.querySelector('[role="gridcell"]') ||
+                      container;
     
     console.log("[WA Privacy] Peek Chat initiated for:", contactName);
     console.log("[WA Privacy] Original Chat name:", originalChatName);
@@ -673,14 +724,20 @@
     
     const normContact = normalizeName(contactName);
     const normOriginal = normalizeName(originalChatName);
-    
+
+    // --- CASE 1: Chat sudah aktif/terbuka → tunggu DOM stabil lalu scrape ---
     if (normOriginal && normContact && normOriginal === normContact) {
-      console.log("[WA Privacy] Chat is already open. Scraping messages immediately.");
-      const messages = scrapeCurrentChatMessages();
-      renderPeekMessages(contactName, messages);
+      console.log("[WA Privacy] Chat is already open. Waiting for DOM stability then scraping...");
+      // Delay slightly to ensure messages are rendered
+      setTimeout(() => {
+        const messages = scrapeCurrentChatMessages();
+        console.log("[WA Privacy] Scraped messages (already open):", messages.length);
+        renderPeekMessages(contactName, messages);
+      }, 300);
       return;
     }
     
+    // --- CASE 2: Chat berbeda → pausing WS, click, poll, restore ---
     // Hide the chat pane to avoid flicker
     document.documentElement.classList.add('wa-peeking-active');
     
@@ -698,7 +755,7 @@
     
     // Start polling to detect when the chat messages render
     let pollCount = 0;
-    const maxPolls = 20; // 20 * 100ms = 2.0 seconds max
+    const maxPolls = 30; // 30 * 100ms = 3.0 seconds max
     
     function restoreOriginalChat() {
       const cleanUp = () => {
@@ -739,8 +796,16 @@
       pollCount++;
       const currentHeaderName = getActiveChatName();
       const normHeader = normalizeName(currentHeaderName);
-      const isTargetChatActive = normHeader === normContact;
-      const messages = isTargetChatActive ? scrapeCurrentChatMessages() : [];
+
+      // Flexible matching: exact OR partial (handles WA DOM name truncation)
+      const isTargetChatActive = normHeader === normContact ||
+        (normHeader.length > 0 && normContact.length > 0 &&
+          (normHeader.includes(normContact) || normContact.includes(normHeader)));
+
+      // Try scraping regardless if we're near the end of polling
+      const messages = (isTargetChatActive || pollCount >= maxPolls - 5)
+        ? scrapeCurrentChatMessages()
+        : [];
       
       console.log(`[WA Privacy] Poll #${pollCount}. Header: "${currentHeaderName}" (Norm: "${normHeader}"). Target: "${normContact}". Active: ${isTargetChatActive}. Messages: ${messages.length}`);
       
@@ -751,12 +816,69 @@
         restoreOriginalChat();
       } else if (pollCount >= maxPolls) {
         clearInterval(pollInterval);
-        console.log("[WA Privacy] Polling timed out. Rendering empty list...");
-        renderPeekMessages(contactName, messages);
+        console.log("[WA Privacy] Polling timed out. Attempting final scrape...");
+        // Final attempt: scrape whatever is in the DOM right now
+        const finalMessages = scrapeCurrentChatMessages();
+        renderPeekMessages(contactName, finalMessages);
         restoreOriginalChat();
       }
     }, 100);
   }
+  // ==========================================================================
+  // FLOATING GLOBAL PEEK BUTTON (di luar DOM WA, tidak bisa di-intercept WA)
+  // ==========================================================================
+  let floatPeekTarget = null; // { name, container }
+  let floatHideTimer = null;
+
+  function getOrCreateFloatPeekBtn() {
+    let btn = document.getElementById('wa-float-peek-btn');
+    if (!btn) {
+      btn = document.createElement('div');
+      btn.id = 'wa-float-peek-btn';
+      btn.title = 'Intip Chat (Tanpa Centang Biru)';
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      `;
+      // Button ini ada di body — 100% di luar tree WA, tidak ada event delegation yang bisa intercept
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (floatPeekTarget) {
+          peekChat(floatPeekTarget.name, floatPeekTarget.container);
+        }
+      });
+      // Saat mouse di atas button, jangan sembunyikan
+      btn.addEventListener('mouseenter', () => {
+        clearTimeout(floatHideTimer);
+      });
+      btn.addEventListener('mouseleave', () => {
+        floatHideTimer = setTimeout(() => hideFloatPeekBtn(), 150);
+      });
+      document.body.appendChild(btn);
+    }
+    return btn;
+  }
+
+  function showFloatPeekBtn(container, name) {
+    clearTimeout(floatHideTimer);
+    const btn = getOrCreateFloatPeekBtn();
+    const rect = container.getBoundingClientRect();
+    // Posisi: tepat di luar kanan panel chat list, vertically centered di row
+    btn.style.top = `${rect.top + rect.height / 2}px`;
+    btn.style.left = `${rect.right + 6}px`;
+    btn.classList.add('visible');
+    floatPeekTarget = { name, container };
+  }
+
+  function hideFloatPeekBtn() {
+    const btn = document.getElementById('wa-float-peek-btn');
+    if (btn) btn.classList.remove('visible');
+    floatPeekTarget = null;
+  }
+
   function scanSelectiveChats() {
     if (!isExtensionActive) {
       removeSelectiveLocks();
@@ -773,7 +895,7 @@
       const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
       if (!name) return;
 
-      // Lock Button
+      // Lock Button (tetap di dalam container — sudah proven bekerja)
       let lockBtn = container.querySelector('.wa-selective-lock-btn');
       if (!lockBtn) {
         lockBtn = document.createElement('div');
@@ -798,37 +920,19 @@
       }
       lockBtn.setAttribute('data-name', name);
 
-      // Peek Button (Shadow Reader)
-      let peekBtn = container.querySelector('.wa-selective-peek-btn');
-      if (!peekBtn) {
-        peekBtn = document.createElement('div');
-        peekBtn.className = 'wa-selective-peek-btn';
-        peekBtn.title = 'Intip Chat (Tanpa Centang Biru)';
-        peekBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        `;
-        peekBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          const currentName = peekBtn.getAttribute('data-name');
-          if (currentName) {
-            peekChat(currentName, container);
-          }
+      // Floating peek button: attach hover listeners ke container (bukan inject button ke dalam)
+      if (!container.dataset.waPeekListenerAttached) {
+        container.dataset.waPeekListenerAttached = '1';
+        container.addEventListener('mouseenter', () => {
+          const currentName = container.querySelector('[data-testid="cell-frame-title"] span[title]')?.getAttribute('title') ||
+                              container.querySelector('[data-testid="cell-frame-title"]')?.textContent?.trim() ||
+                              container.querySelector('span[title]')?.getAttribute('title') || '';
+          if (currentName) showFloatPeekBtn(container, currentName.trim());
         });
-        peekBtn.addEventListener('mousedown', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
+        container.addEventListener('mouseleave', () => {
+          floatHideTimer = setTimeout(() => hideFloatPeekBtn(), 150);
         });
-        peekBtn.addEventListener('mouseup', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        });
-        container.appendChild(peekBtn);
       }
-      peekBtn.setAttribute('data-name', name);
 
       lockBtn.setAttribute('data-name', name);
 
@@ -843,9 +947,7 @@
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
         `;
-        if (rowEl) {
-          rowEl.classList.add('wa-row-locked');
-        }
+        if (rowEl) rowEl.classList.add('wa-row-locked');
       } else {
         lockBtn.classList.remove('locked');
         lockBtn.innerHTML = `
@@ -854,9 +956,7 @@
             <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
           </svg>
         `;
-        if (rowEl) {
-          rowEl.classList.remove('wa-row-locked');
-        }
+        if (rowEl) rowEl.classList.remove('wa-row-locked');
       }
     });
 
