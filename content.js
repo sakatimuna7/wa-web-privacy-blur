@@ -581,13 +581,77 @@
       // Only include if has some content
       if (!text && !prePlainText && !hasImage && !hasVideo && !hasAudio) return;
 
+      // Extract media sources
+      let imgSrc = null;
+      if (hasImage) {
+        const imgEl = el.querySelector('img[src^="blob:"]') || el.querySelector('[data-testid="image-element"] img');
+        if (imgEl && imgEl.src) {
+          imgSrc = imgEl.src;
+        } else {
+          for (const img of allImgs) {
+            const isEmoji = img.classList.contains('emoji') || 
+                            (img.className && typeof img.className === 'string' && img.className.includes('wa')) ||
+                            img.getAttribute('data-plain-text') || 
+                            img.getAttribute('alt') ||
+                            (img.height <= 24 && img.width <= 24);
+            if (!isEmoji && img.src) {
+              imgSrc = img.src;
+              break;
+            }
+          }
+        }
+        if (!imgSrc) {
+          const bgEl = el.querySelector('[style*="background-image"]');
+          if (bgEl) {
+            const bgMatch = bgEl.style.backgroundImage.match(/url\("?(blob:[^"]+)"?\)/);
+            if (bgMatch) {
+              imgSrc = bgMatch[1];
+            }
+          }
+        }
+      }
+
+      let videoSrc = null;
+      let videoPoster = null;
+      if (hasVideo) {
+        const videoEl = el.querySelector('video');
+        if (videoEl) {
+          videoSrc = videoEl.src || (videoEl.querySelector('source') ? videoEl.querySelector('source').src : null);
+          videoPoster = videoEl.getAttribute('poster');
+        }
+        if (!videoPoster) {
+          const imgEl = el.querySelector('img');
+          if (imgEl && imgEl.src && !imgEl.src.startsWith('data:')) {
+            videoPoster = imgEl.src;
+          }
+        }
+      }
+
+      let audioSrc = null;
+      if (hasAudio) {
+        const audioEl = el.querySelector('audio');
+        if (audioEl) {
+          audioSrc = audioEl.src;
+        } else {
+          const audioContainer = el.querySelector('[data-testid="audio-player"]');
+          if (audioContainer) {
+            const innerAudio = audioContainer.querySelector('audio');
+            if (innerAudio) audioSrc = innerAudio.src;
+          }
+        }
+      }
+
       list.push({
         dir: isOut ? 'out' : 'in',
         text: text || '',
         time: time,
         hasImage: hasImage,
         hasVideo: hasVideo,
-        hasAudio: hasAudio
+        hasAudio: hasAudio,
+        imgSrc: imgSrc,
+        videoSrc: videoSrc,
+        videoPoster: videoPoster,
+        audioSrc: audioSrc
       });
     });
     
@@ -688,17 +752,48 @@
       
       let contentHtml = '';
       if (msg.hasImage) {
-        contentHtml += `<div class="peek-media-indicator">📷 Foto</div>`;
+        if (msg.imgSrc) {
+          contentHtml += `
+            <div class="peek-media-container image">
+              <img src="${msg.imgSrc}" class="peek-media-image" alt="Foto" />
+            </div>`;
+        } else {
+          contentHtml += `<div class="peek-media-indicator">📷 Foto</div>`;
+        }
       } else if (msg.hasVideo) {
-        contentHtml += `<div class="peek-media-indicator">🎥 Video</div>`;
+        if (msg.videoSrc) {
+          contentHtml += `
+            <div class="peek-media-container video">
+              <video src="${msg.videoSrc}" poster="${msg.videoPoster || ''}" controls class="peek-media-video"></video>
+            </div>`;
+        } else if (msg.videoPoster) {
+          contentHtml += `
+            <div class="peek-media-container video-placeholder">
+              <img src="${msg.videoPoster}" class="peek-media-image video-thumbnail" />
+              <div class="peek-video-play-overlay">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+            </div>`;
+        } else {
+          contentHtml += `<div class="peek-media-indicator">🎥 Video</div>`;
+        }
       } else if (msg.hasAudio) {
-        contentHtml += `<div class="peek-media-indicator">🎵 Audio</div>`;
+        if (msg.audioSrc) {
+          contentHtml += `
+            <div class="peek-media-container audio">
+              <audio src="${msg.audioSrc}" controls class="peek-media-audio"></audio>
+            </div>`;
+        } else {
+          contentHtml += `<div class="peek-media-indicator">🎵 Audio / VN</div>`;
+        }
       }
       
       if (msg.text) {
-        contentHtml += `<div>${msg.text}</div>`;
+        contentHtml += `<div class="peek-text">${msg.text}</div>`;
       } else if (!msg.hasImage && !msg.hasVideo && !msg.hasAudio) {
-        contentHtml += `<div><i>Pesan tidak didukung</i></div>`;
+        contentHtml += `<div class="peek-text"><i>Pesan tidak didukung</i></div>`;
       }
       
       contentHtml += `<span class="time">${msg.time}</span>`;
@@ -707,6 +802,32 @@
     });
     
     body.scrollTop = body.scrollHeight;
+  }
+
+  function getMessagesFromStore(contactName) {
+    return new Promise((resolve) => {
+      const requestId = 'wa-peek-req-' + Math.random().toString(36).substr(2, 9);
+      
+      const listener = (e) => {
+        if (e.detail && e.detail.requestId === requestId) {
+          document.removeEventListener('wa-privacy-store-response', listener);
+          resolve(e.detail.messages);
+        }
+      };
+      
+      document.addEventListener('wa-privacy-store-response', listener);
+      
+      // Dispatch request to main world
+      document.dispatchEvent(new CustomEvent('wa-privacy-store-request', {
+        detail: { requestId, contactName }
+      }));
+      
+      // If no response within 200ms, assume Store is not available or timed out
+      setTimeout(() => {
+        document.removeEventListener('wa-privacy-store-response', listener);
+        resolve(null);
+      }, 200);
+    });
   }
 
   function peekChat(contactName, container) {
@@ -725,104 +846,138 @@
     const normContact = normalizeName(contactName);
     const normOriginal = normalizeName(originalChatName);
 
-    // --- CASE 1: Chat sudah aktif/terbuka → tunggu DOM stabil lalu scrape ---
-    if (normOriginal && normContact && normOriginal === normContact) {
-      console.log("[WA Privacy] Chat is already open. Waiting for DOM stability then scraping...");
-      // Delay slightly to ensure messages are rendered
-      setTimeout(() => {
-        const messages = scrapeCurrentChatMessages();
-        console.log("[WA Privacy] Scraped messages (already open):", messages.length);
-        renderPeekMessages(contactName, messages);
-      }, 300);
-      return;
-    }
-    
-    // --- CASE 2: Chat berbeda → pausing WS, click, poll, restore ---
-    // Hide the chat pane to avoid flicker
-    document.documentElement.classList.add('wa-peeking-active');
-    
-    console.log("[WA Privacy] Synchronously pausing WebSocket...");
-    sendWSControl('pause');
-    
-    console.log("[WA Privacy] Dispatching click to open target chat...");
-    simulateClick(clickable);
-    
-    // Discard the queue after a brief moment to unpause WebSocket but drop the read receipt
-    setTimeout(() => {
-      console.log("[WA Privacy] Discarding queued packets and resuming WebSocket...");
-      sendWSControl('discard');
-    }, 60);
-    
-    // Start polling to detect when the chat messages render
-    let pollCount = 0;
-    const maxPolls = 30; // 30 * 100ms = 3.0 seconds max
-    
-    function restoreOriginalChat() {
-      const cleanUp = () => {
-        document.documentElement.classList.remove('wa-peeking-active');
-      };
+    // Try reading directly from memory (window.Store) first!
+    getMessagesFromStore(contactName).then(storeMessages => {
+      if (storeMessages) {
+        console.log("[WA Privacy] Messages retrieved successfully from memory Store. Rendering...");
+        renderPeekMessages(contactName, storeMessages);
+        return; // Direct memory hit! No click, no WS pausing, no flickers!
+      }
+      
+      // --- FALLBACK TO CLICK METHOD ---
+      console.log("[WA Privacy] Store not available or timed out. Falling back to DOM click strategy...");
 
-      if (originalChatName && normOriginal !== normContact) {
-        console.log("[WA Privacy] Restoring original chat:", originalChatName);
-        const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
-        let originalRowClickable = null;
-        for (const row of allRows) {
-          const titleEl = row.querySelector('[data-testid="cell-frame-title"] span[title]') || 
-                          row.querySelector('[data-testid="cell-frame-title"]') || 
-                          row.querySelector('span[title]');
-          if (titleEl) {
-            const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
-            if (normalizeName(name) === normOriginal) {
-              originalRowClickable = row.querySelector('[data-testid="cell-frame-title"]') || row;
-              break;
+      // --- CASE 1: Chat sudah aktif/terbuka → tunggu DOM stabil lalu scrape ---
+      if (normOriginal && normContact && normOriginal === normContact) {
+        console.log("[WA Privacy] Chat is already open. Waiting for DOM stability then scraping...");
+        // Delay slightly to ensure messages are rendered
+        setTimeout(() => {
+          const messages = scrapeCurrentChatMessages();
+          console.log("[WA Privacy] Scraped messages (already open):", messages.length);
+          renderPeekMessages(contactName, messages);
+        }, 300);
+        return;
+      }
+      
+      // --- CASE 2: Chat berbeda → pausing WS, click, poll, restore ---
+      // Hide the chat pane to avoid flicker
+      document.documentElement.classList.add('wa-peeking-active');
+      
+      // Set the wa-peek-active attribute to "true" SYNCHRONOUSLY before click
+      document.documentElement.setAttribute('wa-peek-active', 'true');
+      console.log("[WA Privacy] Synchronously pausing WebSocket via DOM attribute...");
+      sendWSControl('pause');
+      
+      console.log("[WA Privacy] Dispatching click to open target chat...");
+      simulateClick(clickable);
+      
+      // Start polling to detect when the chat messages render
+      let pollCount = 0;
+      const maxPolls = 30; // 30 * 100ms = 3.0 seconds max
+      
+      function restoreOriginalChat() {
+        const cleanUp = () => {
+          document.documentElement.classList.remove('wa-peeking-active');
+          // Reset the wa-peek-active attribute to "false"
+          document.documentElement.setAttribute('wa-peek-active', 'false');
+          console.log("[WA Privacy] Peeking process finished. Resuming & discarding WS queue...");
+          sendWSControl('discard');
+        };
+
+        if (originalChatName && normOriginal !== normContact) {
+          console.log("[WA Privacy] Restoring original chat:", originalChatName);
+          const allRows = document.querySelectorAll('[data-testid="cell-frame-container"]');
+          let originalRowClickable = null;
+          for (const row of allRows) {
+            const titleEl = row.querySelector('[data-testid="cell-frame-title"] span[title]') || 
+                            row.querySelector('[data-testid="cell-frame-title"]') || 
+                            row.querySelector('span[title]');
+            if (titleEl) {
+              const name = (titleEl.getAttribute('title') || titleEl.textContent || '').trim();
+              if (normalizeName(name) === normOriginal) {
+                originalRowClickable = row.querySelector('[data-testid="cell-frame-title"]') || row;
+                break;
+              }
             }
           }
-        }
-        if (originalRowClickable) {
-          setTimeout(() => {
-            console.log("[WA Privacy] Clicking original chat element...");
-            simulateClick(originalRowClickable);
-            setTimeout(cleanUp, 100);
-          }, 80);
+          if (originalRowClickable) {
+            setTimeout(() => {
+              console.log("[WA Privacy] Clicking original chat element...");
+              simulateClick(originalRowClickable);
+              setTimeout(cleanUp, 120);
+            }, 80);
+          } else {
+            cleanUp();
+          }
         } else {
-          cleanUp();
+          // No original chat was open. We should close the active target chat (go back to welcome screen)
+          console.log("[WA Privacy] No original chat was open. Simulating Escape to close target chat...");
+          
+          // Simulating Escape keydown to close chat
+          const escapeEvent = new KeyboardEvent('keydown', {
+            key: 'Escape',
+            keyCode: 27,
+            code: 'Escape',
+            which: 27,
+            bubbles: true,
+            cancelable: true
+          });
+          document.dispatchEvent(escapeEvent);
+          
+          // Fallback: try clicking a back button if one exists
+          const backBtn = document.querySelector('[data-testid="aaron-back"]') || 
+                          document.querySelector('[data-testid="back"]') ||
+                          document.querySelector('[data-icon="back"]');
+          if (backBtn) {
+            simulateClick(backBtn);
+          }
+          
+          setTimeout(cleanUp, 150);
         }
-      } else {
-        cleanUp();
       }
-    }
 
-    const pollInterval = setInterval(() => {
-      pollCount++;
-      const currentHeaderName = getActiveChatName();
-      const normHeader = normalizeName(currentHeaderName);
+      const pollInterval = setInterval(() => {
+        pollCount++;
+        const currentHeaderName = getActiveChatName();
+        const normHeader = normalizeName(currentHeaderName);
 
-      // Flexible matching: exact OR partial (handles WA DOM name truncation)
-      const isTargetChatActive = normHeader === normContact ||
-        (normHeader.length > 0 && normContact.length > 0 &&
-          (normHeader.includes(normContact) || normContact.includes(normHeader)));
+        // Flexible matching: exact OR partial (handles WA DOM name truncation)
+        const isTargetChatActive = normHeader === normContact ||
+          (normHeader.length > 0 && normContact.length > 0 &&
+            (normHeader.includes(normContact) || normContact.includes(normHeader)));
 
-      // Try scraping regardless if we're near the end of polling
-      const messages = (isTargetChatActive || pollCount >= maxPolls - 5)
-        ? scrapeCurrentChatMessages()
-        : [];
-      
-      console.log(`[WA Privacy] Poll #${pollCount}. Header: "${currentHeaderName}" (Norm: "${normHeader}"). Target: "${normContact}". Active: ${isTargetChatActive}. Messages: ${messages.length}`);
-      
-      if (isTargetChatActive && messages.length > 0) {
-        clearInterval(pollInterval);
-        console.log("[WA Privacy] Messages successfully loaded. Rendering...");
-        renderPeekMessages(contactName, messages);
-        restoreOriginalChat();
-      } else if (pollCount >= maxPolls) {
-        clearInterval(pollInterval);
-        console.log("[WA Privacy] Polling timed out. Attempting final scrape...");
-        // Final attempt: scrape whatever is in the DOM right now
-        const finalMessages = scrapeCurrentChatMessages();
-        renderPeekMessages(contactName, finalMessages);
-        restoreOriginalChat();
-      }
-    }, 100);
+        // Try scraping regardless if we're near the end of polling
+        const messages = (isTargetChatActive || pollCount >= maxPolls - 5)
+          ? scrapeCurrentChatMessages()
+          : [];
+        
+        console.log(`[WA Privacy] Poll #${pollCount}. Header: "${currentHeaderName}" (Norm: "${normHeader}"). Target: "${normContact}". Active: ${isTargetChatActive}. Messages: ${messages.length}`);
+        
+        if (isTargetChatActive && messages.length > 0) {
+          clearInterval(pollInterval);
+          console.log("[WA Privacy] Messages successfully loaded. Rendering...");
+          renderPeekMessages(contactName, messages);
+          restoreOriginalChat();
+        } else if (pollCount >= maxPolls) {
+          clearInterval(pollInterval);
+          console.log("[WA Privacy] Polling timed out. Attempting final scrape...");
+          // Final attempt: scrape whatever is in the DOM right now
+          const finalMessages = scrapeCurrentChatMessages();
+          renderPeekMessages(contactName, finalMessages);
+          restoreOriginalChat();
+        }
+      }, 100);
+    });
   }
   // ==========================================================================
   // FLOATING GLOBAL PEEK BUTTON (di luar DOM WA, tidak bisa di-intercept WA)

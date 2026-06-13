@@ -901,6 +901,113 @@ html.theme-dark .peek-bubble.out .time,
   font-size: 12px;
 }
 
+/* Media containers and files inside bubbles */
+.peek-media-container {
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 4px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+}
+
+.theme-dark .peek-media-container,
+html.theme-dark .peek-media-container,
+:root[class*="theme-dark"] .peek-media-container {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.peek-media-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.theme-dark .peek-media-image,
+html.theme-dark .peek-media-image,
+:root[class*="theme-dark"] .peek-media-image {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* For portrait/small image styles */
+.peek-media-container.image {
+  background-color: transparent;
+}
+
+.peek-media-video {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 6px;
+  background-color: #000;
+  display: block;
+}
+
+.peek-media-container.video-placeholder {
+  cursor: pointer;
+}
+
+.peek-video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(17, 27, 33, 0.7);
+  color: #fff;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.peek-media-container.video-placeholder:hover .peek-video-play-overlay {
+  transform: translate(-50%, -50%) scale(1.1);
+  background-color: #00a884;
+}
+
+.peek-media-audio {
+  width: 100%;
+  max-width: 250px;
+  height: 36px;
+  border-radius: 18px;
+  background-color: #f1f3f4;
+  outline: none;
+}
+
+.theme-dark .peek-media-audio,
+html.theme-dark .peek-media-audio,
+:root[class*="theme-dark"] .peek-media-audio {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #0e1b21;
+}
+
+.peek-text {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Adjust bubble sizes if containing media */
+.peek-bubble:has(.peek-media-container) {
+  padding: 4px;
+}
+
+.peek-bubble:has(.peek-media-container) .time {
+  padding: 0 8px 4px 0;
+}
+
+.peek-bubble:has(.peek-media-container) .peek-text {
+  padding: 6px 8px;
+}
+
 /* Footer / Warning Banner */
 .peek-footer {
   padding: 12px 20px;
